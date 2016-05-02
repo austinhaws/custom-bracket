@@ -1,0 +1,67 @@
+#poolBox {
+	width: 500px;
+	height: 500px;
+	margin: 0 auto;
+}
+
+.teamsCloud {
+	width: 475px;
+	height: 400px;
+	border: 1px solid black;
+	border-radius: 450px;
+	position: relative;
+}
+
+.teamsCloud > .team {
+	position: absolute;
+}
+
+.teamsCloud > .team:nth-child(1) {
+	top: 200px;
+	left: 100px;
+}
+.teamsCloud > .team:nth-child(2) {
+	top: 300px;
+	left: 100px;
+}
+.teamsCloud > .team:nth-child(3) {
+	top: 300px;
+	left: 200px;
+}
+.teamsCloud > .team:nth-child(4) {
+	top: 300px;
+	left: 325px;
+}
+.teamsCloud > .team:nth-child(5) {
+	top: 200px;
+	left: 300px;
+}
+.teamsCloud > .team:nth-child(6) {
+	top: 100px;
+	left: 325px;
+}
+.teamsCloud > .team:nth-child(7) {
+	top: 100px;
+	left: 200px;
+}
+.teamsCloud > .team:nth-child(8) {
+	top: 100px;
+	left: 75px;
+}
+
+.teamsList {
+	margin: 50px auto 0;
+	display: flex;
+	width: 500px;
+	flex: 1;
+	flex-wrap: wrap;
+	justify-content: space-around;
+}
+
+.teamsList > .team {
+	margin: 15px;
+}
+
+.button.picked {
+	background: #945a50;
+}
