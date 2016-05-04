@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Dao\PoolDao;
+use App\Enums\Roles;
 use App\Http\Requests;
 use App\Pool;
-use App\Dao\PoolDao;
 use Auth;
 use Illuminate\Http\Request;
 
@@ -37,7 +38,8 @@ class PoolController extends Controller
 		return view('pool', ['poolId' => $id]);
 	}
 
-	private function compareNumeric($a, $b) {
+	private function compareNumeric($a, $b)
+	{
 		return $a > $b ? 1 : ($a < $b ? -1 : 0);
 	}
 
@@ -45,7 +47,7 @@ class PoolController extends Controller
 	{
 
 		$teams = PoolDao::selectTeamsListForUserAndPool(Auth::user()->id, $id);
-		usort($teams, function($a, $b) {
+		usort($teams, function ($a, $b) {
 			$order = $this->compareNumeric($a->votes, $b->votes) * -1;
 			if (!$order) {
 				// keep order same for top rankers but sort later by sort order
@@ -66,10 +68,10 @@ class PoolController extends Controller
 		}
 
 		// resort lists
-		usort($cloudTeams, function($a, $b) {
+		usort($cloudTeams, function ($a, $b) {
 			return $this->compareNumeric($a->sortOrder, $b->sortOrder);
 		});
-		usort($uncloudTeams, function($a, $b) {
+		usort($uncloudTeams, function ($a, $b) {
 			return $this->compareNumeric($a->sortOrder, $b->sortOrder);
 		});
 
@@ -95,8 +97,9 @@ class PoolController extends Controller
 			'numberPicks' => $picks - $pickeds,
 		]);
 	}
-	
-	public function pickTeam($teamId) {
+
+	public function pickTeam($teamId)
+	{
 		$team = PoolDao::selectTeamById($teamId);
 
 		$picksLeft = $this->picksLeftForPoolId($team->pool_id);
@@ -107,7 +110,8 @@ class PoolController extends Controller
 		}
 	}
 
-	public function enterTeam(Request $request) {
+	public function enterTeam(Request $request)
+	{
 		// get poolId from post
 		$poolId = $request->input('poolId');
 
@@ -118,28 +122,29 @@ class PoolController extends Controller
 		$picksLeft = $this->picksLeftForPoolId($poolId);
 
 		$team = false;
-		
+
 		// add the team to the pool
 		if ($picksLeft) {
 			// create the team
 			$teamId = PoolDao::insertPoolTeamEntry($poolId, $name);
-			
+
 			$team = PoolDao::selectTeamById($teamId);
-			
+
 			// pick the team
 			PoolDao::insertUserPoolTeamEntry(Auth::user()->id, $teamId);
 		}
-		
+
 		echo json_encode($team);
 	}
 
 	/**
 	 *  how many picks does the current logged in user have for this pool?
-	 * 
+	 *
 	 * @param $poolId int which pool
 	 * @return int # of picks left for the pool
 	 */
-	private function picksLeftForPoolId($poolId) {
+	private function picksLeftForPoolId($poolId)
+	{
 		// get how many picks this person has left for this pool
 		$teams = PoolDao::selectTeamsListForUserAndPool(Auth::user()->id, $poolId);
 
@@ -155,5 +160,41 @@ class PoolController extends Controller
 		}
 
 		return $picks - $pickeds;
+	}
+
+	public function poolAdd()
+	{
+		return $this->editPoolView([
+			'id' => '',
+			'name' => '',
+			'closing_date' => '',
+			'open_date' => '',
+		]);
+	}
+
+	public function poolEdit($id)
+	{
+		return $this->editPoolView(Pool::where('id', $id)->first());
+	}
+
+	private function editPoolView($pool)
+	{
+		Roles::checkIsRole([Roles::ADMIN]);
+		return view('pool-edit', ['pool' => json_encode($pool)]);
+	}
+
+	public function poolSave(Request $request)
+	{
+		Roles::checkIsRole([Roles::ADMIN]);
+
+		$pool = [
+			'id' => $request->input('poolId'),
+			'name' => $request->input('name'),
+			'open_date' => $request->input('open_date'),
+			'closing_date' => $request->input('close_date'),
+		];
+		PoolDao::savePool($pool);
+		
+		return $this->poolEdit($pool['id']);
 	}
 }

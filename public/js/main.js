@@ -19,9 +19,8 @@ function protectA(runFunction) {
  * @returns data + csrf token
  */
 function csrf(data) {
-	var csrf = {
-		_token: globals.csrf
-	};
+	var csrf = {};
+	csrf[globals.csrfName] = globals.csrf;
 	$.extend(csrf, data);
 	return csrf;
 }

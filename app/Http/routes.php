@@ -51,3 +51,6 @@ Route::post('/pool/enterTeam', 'PoolController@enterTeam');
 
 // Admin
 Route::get('/admin', 'AdminController@index');
+Route::get('/admin/pool/add', 'PoolController@poolAdd');
+Route::post('/admin/pool/save', 'PoolController@poolSave');
+Route::get('/admin/pool/{id}', 'PoolController@poolEdit');

@@ -44,7 +44,7 @@ var Pool = React.createClass({
 		return (
 			<div className="pool">
 				<h2 className="poolName">
-					<a href={'admin/pool/' + this.props.id}>{this.props.name}</a>
+					<a href={'pool/' + this.props.id}>{this.props.name}</a>
 				</h2>
 			</div>
 		);
@@ -52,18 +52,13 @@ var Pool = React.createClass({
 });
 
 var AddPool = React.createClass({
-	render: function() {
-		return (
-			<a href="admin/pool/add" class="add-new-pool">Add New Pool</a>
-		);
-	}
+	render: function( ){
+		<a href="#" class="add-new-pool">Add New Pool</a>
+	};
 });
 
 ReactDOM.render(
-	<div>
 	<AddPool />
-	<PoolsBox url="pool/list"/>
-	</div>
-	,
+	<PoolsBox url="pool/list"/>,
 	document.getElementById('poolsBox')
 );

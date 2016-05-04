@@ -35,4 +35,12 @@ class PoolDao
 	public static function insertPoolTeamEntry($poolId, $teamName) {
 		return DB::table('pool_entries')->insertGetId(['pool_id' => $poolId, 'name' => $teamName]);
 	}
+
+	public static function savePool(&$pool) {
+		if ($pool['id']) {
+			DB::table('pools')->where('id', $pool['id'])->update($pool);
+		} else {
+			$pool['id'] = DB::table('pools')->insertGetId($pool);
+		}
+	}
 }
