@@ -6,6 +6,22 @@ use DB;
 
 class PoolDao
 {
+	public static function selectTeamsListForPool($poolId)
+	{
+		return DB::Select('
+			select
+				pool_entries.pool_id pool_id,
+				pool_entries.id id,
+				pool_entries.name name,
+				(select count(*) from user_x_pool_team_entries uxpte where uxpte.pool_entry_id = pool_entries.id) votes
+			from pool_entries
+			left join user_x_pool_team_entries 
+				on user_x_pool_team_entries.pool_entry_id = pool_entries.id 
+			where pool_id = ?
+			order by votes desc, lower(name) asc
+		', [$poolId]);
+	}
+
 	public static function selectTeamsListForUserAndPool($userId, $poolId)
 	{
 		return DB::Select('
@@ -42,5 +58,9 @@ class PoolDao
 		} else {
 			$pool['id'] = DB::table('pools')->insertGetId($pool);
 		}
+	}
+
+	public static function insertPoolTeam($team) {
+		DB::table('pool_entries')->insert($team);
 	}
 }

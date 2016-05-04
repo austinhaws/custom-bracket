@@ -169,12 +169,15 @@ class PoolController extends Controller
 			'name' => '',
 			'closing_date' => '',
 			'open_date' => '',
+			'teams' => [],
 		]);
 	}
 
 	public function poolEdit($id)
 	{
-		return $this->editPoolView(Pool::where('id', $id)->first());
+		$pool = Pool::where('id', $id)->first();
+		$pool['teams'] = PoolDao::selectTeamsListForPool($pool['id']);
+		return $this->editPoolView($pool);
 	}
 
 	private function editPoolView($pool)
@@ -188,13 +191,20 @@ class PoolController extends Controller
 		Roles::checkIsRole([Roles::ADMIN]);
 
 		$pool = [
-			'id' => $request->input('poolId'),
+			'id' => $request->input('id'),
 			'name' => $request->input('name'),
 			'open_date' => $request->input('open_date'),
 			'closing_date' => $request->input('close_date'),
 		];
 		PoolDao::savePool($pool);
-		
-		return $this->poolEdit($pool['id']);
+
+		$teams = $request->input('teams');
+		foreach ($teams as $team) {
+			if (!$team['id']) {
+				PoolDao::insertPoolTeam(['pool_id' => $pool['id'], 'name' => $team['name']]);
+			}
+		}
+
+		return json_encode(['success' => 'success']);
 	}
 }
