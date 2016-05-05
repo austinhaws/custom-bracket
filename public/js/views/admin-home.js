@@ -4,15 +4,12 @@ var PoolsBox = React.createClass({
 	},
 	componentDidMount: function() {
 		$.ajax({
-			url: this.props.url,
+			url: 'pool/list',
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
 				this.setState({data: data});
 			}.bind(this),
-			error: function(xhr, status, err) {
-				console.error(this.props.url, status, err.toString());
-			}.bind(this)
 		});
 	},
 	render: function() {
@@ -28,7 +25,7 @@ var PoolsList = React.createClass({
 	render: function() {
 		var poolNodes = this.props.data.map(function(pool) {
 			return (
-				<Pool name={pool.name} key={pool.id} id={pool.id}/>
+				<Pool pool={pool} key={pool.id}/>
 			);
 		});
 		return (
@@ -44,7 +41,7 @@ var Pool = React.createClass({
 		return (
 			<div className="pool">
 				<h2 className="poolName">
-					<a href={'admin/pool/' + this.props.id}>{this.props.name}</a>
+					<a href={'admin/pool/' + this.props.pool.id}>{this.props.pool.name}</a> <span className="dates"> {poolDateString(this.props.pool.open_date, this.props.pool.closing_date)}</span>
 				</h2>
 			</div>
 		);
@@ -59,10 +56,60 @@ var AddPool = React.createClass({
 	}
 });
 
+var BracketsBox = React.createClass({
+	getInitialState: function() {
+		return {
+			brackets: []
+		};
+	},
+	componentDidMount: function() {
+		$.ajax({
+			url: 'bracket/list',
+			dataType: 'json',
+			cache: false,
+			success: function(data) {
+				this.setState({brackets: data});
+			}.bind(this),
+		});
+	},
+	render: function() {
+		var bracketNodes = this.state.brackets.map(function(bracket) {
+			return (
+				<Bracket bracket={bracket} key={bracket.id}/>
+			);
+		});
+
+		return (
+		<div>
+			<div>
+				<a href="admin/bracket/add">Add New Bracket</a>
+			</div>
+			<div>
+				{bracketNodes}
+			</div>
+		</div>
+		);
+	}
+});
+
+var Bracket = React.createClass({
+	render: function() {
+		return (
+		<div className="bracket">
+			<h2>
+			<a href={'admin/bracket/' + this.props.bracket.id}>{this.props.bracket.name}</a> <span className="dates"> {poolDateString(this.props.bracket.open_date, this.props.bracket.first_round_date)}</span>
+		</h2>
+		</div>
+		)
+	}
+});
+
+
 ReactDOM.render(
 	<div>
-	<AddPool />
-	<PoolsBox url="pool/list"/>
+		<AddPool />
+		<PoolsBox/>
+		<BracketsBox/>
 	</div>
 	,
 	document.getElementById('poolsBox')

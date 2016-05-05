@@ -49,8 +49,14 @@ Route::get('/pool/detail/{id}', 'PoolController@detail');
 Route::get('/pool/pick/{id}', 'PoolController@pickTeam');
 Route::post('/pool/enterTeam', 'PoolController@enterTeam');
 
+Route::get('/bracket/list', 'BracketController@ajaxList');
+
 // Admin
 Route::get('/admin', 'AdminController@index');
 Route::get('/admin/pool/add', 'PoolController@poolAdd');
 Route::post('/admin/pool/save', 'PoolController@poolSave');
 Route::get('/admin/pool/{id}', 'PoolController@poolEdit');
+
+Route::get('/admin/bracket/add', 'BracketController@bracketAdd');
+Route::post('/admin/bracket/save', 'BracketController@bracketSave');
+Route::get('/admin/bracket/{id}', 'BracketController@bracketEdit');

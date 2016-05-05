@@ -199,9 +199,11 @@ class PoolController extends Controller
 		PoolDao::savePool($pool);
 
 		$teams = $request->input('teams');
-		foreach ($teams as $team) {
-			if (!$team['id']) {
-				PoolDao::insertPoolTeam(['pool_id' => $pool['id'], 'name' => $team['name']]);
+		if ($teams) {
+			foreach ($teams as $team) {
+				if (!$team['id']) {
+					PoolDao::insertPoolTeam(['pool_id' => $pool['id'], 'name' => $team['name']]);
+				}
 			}
 		}
 

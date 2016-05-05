@@ -22,6 +22,7 @@
     <script src="js/vendor/react/react.js"></script>
     <script src="js/vendor/react/react-dom.js"></script>
     <script src="js/vendor/babel/browser.min.js"></script>
+    <script src="js/vendor/moment.min.js"></script>
     <script src="js/main.js"></script>
 
     <script>
@@ -39,6 +40,11 @@
         .fa-btn {
             margin-right: 6px;
         }
+
+         .dates {
+             font-size: 13px;
+         }
+
     </style>
 </head>
 <body id="app-layout">

@@ -24,3 +24,23 @@ function csrf(data) {
 	$.extend(csrf, data);
 	return csrf;
 }
+
+function poolDateString(teamOpenDate, teamCloseDate) {
+	var openDate = teamOpenDate == '0000-00-00' ? false : moment(teamOpenDate);
+	var closeDate = teamCloseDate == '0000-00-00' ? false : moment(teamCloseDate);
+	var today = moment();
+	var dateString;
+	var dateFormat = 'MMM Do, Y';
+
+	if (!openDate) {
+		dateString = 'Not Yet Open';
+	} else if (openDate.isAfter(today)) {
+		dateString = 'Opens ' + openDate.format(dateFormat);
+	} else if (today.isBefore(closeDate)) {
+		dateString = 'Closes ' + closeDate.format(dateFormat);
+	} else {
+		dateString = 'Closed';
+	}
+
+	return dateString;
+}

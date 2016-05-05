@@ -28,7 +28,7 @@ var PoolsList = React.createClass({
 	render: function() {
 		var poolNodes = this.props.data.map(function(pool) {
 			return (
-				<Pool name={pool.name} key={pool.id} id={pool.id}/>
+				<Pool key={pool.id} pool={pool}/>
 			);
 		});
 		return (
@@ -44,7 +44,7 @@ var Pool = React.createClass({
 		return (
 			<div className="pool">
 				<h2 className="poolName">
-					<a href={'pool/' + this.props.id}>{this.props.name}</a>
+					<a href={'pool/' + this.props.pool.id}>{this.props.pool.name}</a> <span className="poolDates"> {poolDateString(this.props.pool.open_date, this.props.pool.closing_date)}</span>
 				</h2>
 			</div>
 		);
