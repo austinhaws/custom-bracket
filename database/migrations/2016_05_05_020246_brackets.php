@@ -26,7 +26,6 @@ class Brackets extends Migration
 			$table->date('third_round_date')->nullable();
 			$table->date('fourth_round_date')->nullable();
 			$table->date('fifth_round_date')->nullable();
-			$table->date('sixth_round_date')->nullable();
 			$table->timestamps();
 		});
 	}

@@ -8,6 +8,7 @@ use Auth;
 use App\Enums\Roles;
 use Illuminate\Http\Request;
 use App\Bracket;
+use App\Pool;
 
 class BracketController extends Controller
 {
@@ -56,7 +57,10 @@ class BracketController extends Controller
 	private function editBracketView($bracket)
 	{
 		Roles::checkIsRole([Roles::ADMIN]);
-		return view('bracket-edit', ['bracket' => json_encode($bracket)]);
+		return view('bracket-edit', [
+			'bracket' => json_encode($bracket),
+			'pools' => json_encode(Pool::orderBy('name', 'asc')->get()),
+		]);
 	}
 
 	public function bracketSave(Request $request)
@@ -72,11 +76,19 @@ class BracketController extends Controller
 			'third_round_date' => $request->input('third_round_date'),
 			'fourth_round_date' => $request->input('fourth_round_date'),
 			'fifth_round_date' => $request->input('fifth_round_date'),
-			'sixth_round_date' => $request->input('sixth_round_date'),
+			'top_left_pool_id' => $request->input('top_left_pool_id'),
+			'top_right_pool_id' => $request->input('top_right_pool_id'),
+			'bottom_left_pool_id' => $request->input('bottom_left_pool_id'),
+			'bottom_right_pool_id' => $request->input('bottom_right_pool_id'),
 		];
 		BracketDao::saveBracket($bracket);
 
 		return json_encode(['success' => 'success']);
+	}
+
+	public function bracketScore($id, $round) {
+		//var_dump([$id, $round]);
+		// get all games for the round
 	}
 
 }

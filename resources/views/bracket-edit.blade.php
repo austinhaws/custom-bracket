@@ -3,6 +3,7 @@
 @section('content')
     <script>
         globals.bracket = <?=$bracket?>;
+        globals.pools = <?=$pools?>;
     </script>
 
     <div id="bracket-form"></div>
