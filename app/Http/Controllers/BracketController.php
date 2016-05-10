@@ -196,8 +196,8 @@ class BracketController extends Controller
 			if ($game['pool_entry_1_score'] && $game['pool_entry_2_score']) {
 				$winnerId = intval($game['pool_entry_1_score']) > intval($game['pool_entry_2_score']) ? $game['pool_entry_1_id'] : $game['pool_entry_2_id'];
 
-				BracketDao::updateBracketGame(['pool_entry_1_id' => $winnerId], ['prev_bracket_game_1_id' => $game['id']]);
-				BracketDao::updateBracketGame(['pool_entry_2_id' => $winnerId], ['prev_bracket_game_2_id' => $game['id']]);
+				BracketDao::updateBracketGame(['pool_entry_1_id' => $winnerId, 'pool_entry_1_score' => null], ['prev_bracket_game_1_id' => $game['id']]);
+				BracketDao::updateBracketGame(['pool_entry_2_id' => $winnerId, 'pool_entry_2_score' => null], ['prev_bracket_game_2_id' => $game['id']]);
 			}
 		}
 		echo json_encode(['success' => 'success']);
