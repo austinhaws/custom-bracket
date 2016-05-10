@@ -23,4 +23,16 @@ class BracketDao
 			$bracket['id'] = DB::table('brackets')->insertGetId($bracket);
 		}
 	}
+	
+	public static function selectBracketGames($bracketId, $round) {
+		return DB::table('bracket_games')->where(['round' => $round, 'bracket_id' => $bracketId])->get();
+	}
+
+	public static function saveBracketGame(&$bracketGame) {
+		if ($bracketGame['id']) {
+			DB::table('bracket_games')->where('id', $bracketGame['id'])->update($bracketGame);
+		} else {
+			$bracketGame['id'] = DB::table('bracket_games')->insertGetId($bracketGame);
+		}
+	}
 }

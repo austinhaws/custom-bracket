@@ -80,7 +80,7 @@ var PoolList = React.createClass({
 	render: function() {
 		var teamNodes = this.state.teams.map(function(team) {
 			return (
-				<Team name={team.name} votes={team.votes} key={team.id} />
+				<Team name={team.name} votes={team.votes} key={team.id ? team.id : team.name} />
 			);
 		});
 		return (

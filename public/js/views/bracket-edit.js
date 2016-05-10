@@ -20,8 +20,11 @@ var BracketForm = React.createClass({
 				cache: false,
 				method: 'post',
 				success: function(data) {
-					// show a spinner instead
-					alert('saved');
+					if (globals.bracket.id) {
+						alert('Saved');
+					} else {
+						window.location = 'admin/bracket/' + data.id;
+					}
 				}.bind(this),
 				error: function(xhr, status, err) {
 					console.error(this.props.url, status, err.toString());
@@ -53,23 +56,28 @@ var BracketForm = React.createClass({
 				<InputField fieldId="second_round_date" title="Second Round Date" placeholder="YYYY-MM-DD" value={this.state.second_round_date} handleChange={this.handleChange}/>
 				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="2">Score Round 2</button>  : null}
 
-				<InputField fieldId="third_round_date" title="Third Round Date" placeholder="YYYY-MM-DD" value={this.state.third_round_date} handleChange={this.handleChange}/>
-				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="3">Score Round 3</button>  : null}
+				<InputField fieldId="third_round_date" title="Third Round Date (Sweet 16)" placeholder="YYYY-MM-DD" value={this.state.third_round_date} handleChange={this.handleChange}/>
+				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="3">Score Round 3  (Sweet 16)</button>  : null}
 
-				<InputField fieldId="fourth_round_date" title="Fourth Round Date" placeholder="YYYY-MM-DD" value={this.state.fourth_round_date} handleChange={this.handleChange}/>
-				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="4">Score Round 4</button>  : null}
+				<InputField fieldId="fourth_round_date" title="Fourth Round Date (Elite 8)" placeholder="YYYY-MM-DD" value={this.state.fourth_round_date} handleChange={this.handleChange}/>
+				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="4">Score Round 4 (Elite 8)</button>  : null}
 
-				<InputField fieldId="fifth_round_date" title="Fifth Round Date" placeholder="YYYY-MM-DD" value={this.state.fifth_round_date} handleChange={this.handleChange}/>
-				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="5">Score Round 5</button>  : null}
+				<InputField fieldId="fifth_round_date" title="Fifth Round Date (Final Four)" placeholder="YYYY-MM-DD" value={this.state.fifth_round_date} handleChange={this.handleChange}/>
+				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="5">Score Round 5 (Final Four)</button>  : null}
 
-				<PoolPicker fieldName="Top Left Pool" fieldId="top_left_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.top_left_pool_id}/>
-				<PoolPicker fieldName="Bottom Left Pool" fieldId="bottom_left_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.bottom_left_pool_id}/>
-				<PoolPicker fieldName="Top Right Pool" fieldId="top_right_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.top_right_pool_id}/>
-				<PoolPicker fieldName="Bottom Right Pool" fieldId="bottom_right_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.bottom_right_pool_id}/>
+				<InputField fieldId="sixth_round_date" title="Sixth Round Date (Championship)" placeholder="YYYY-MM-DD" value={this.state.sixth_round_date} handleChange={this.handleChange}/>
+				{includeScoreButtons ? <button onClick={this.scoreRound} data-round="6">Score Round 6 (Championship)</button>  : null}
+
+				<PoolPicker fieldName="Top Left Pool" fieldId="top_left_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.top_left_pool_id ? this.state.top_left_pool_id : ''}/>
+				<PoolPicker fieldName="Bottom Left Pool" fieldId="bottom_left_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.bottom_left_pool_id ? this.state.bottom_left_pool_id : ''}/>
+				<PoolPicker fieldName="Top Right Pool" fieldId="top_right_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.top_right_pool_id ? this.state.top_right_pool_id : ''}/>
+				<PoolPicker fieldName="Bottom Right Pool" fieldId="bottom_right_pool_id" pools={this.props.pools} poolChange={this.poolChange} value={this.state.bottom_right_pool_id ? this.state.bottom_right_pool_id : ''}/>
 
 				<span id="info-blurb">
 					After the 'Open Date' people can predict which teams will win in the bracket.<br/>
 					After the 'First Round Date' people can no longer predict teams, games start.<br/>
+					Bad things happen if you change pools after going to a game scoring page (games will have old teamids from previous pool).<br/>
+					Bad things happen if you use the same pool more than once for a bracket (games get teamids mixed up).<br/>
 				</span>
 
 				<button onClick={this.handleSubmit}>Save</button>
@@ -80,19 +88,10 @@ var BracketForm = React.createClass({
 
 // an input field for the form
 var InputField = React.createClass({
-	getInitialState: function() {
-		return {
-			value: this.props.value
-		};
-	},
-	handleChange: function(e) {
-		this.setState({value: e.target.value});
-		this.props.handleChange(e);
-	},
 	render: function() {
 		return (
 			<div>
-				<label for={this.props.fieldId}>{this.props.title}:</label><input type="text" id={this.props.fieldId} name={this.props.fieldId} placeholder={this.props.placeholder} value={this.state.value} onChange={this.handleChange}/>
+				<label for={this.props.fieldId}>{this.props.title}:</label><input type="text" id={this.props.fieldId} name={this.props.fieldId} placeholder={this.props.placeholder} defaultValue={this.props.value} onChange={this.props.handleChange}/>
 			</div>
 		);
 	}
