@@ -185,4 +185,21 @@ class BracketController extends Controller
 		]);
 	}
 
+	public function bracketScoreSave(Request $request) {
+		Roles::checkIsRole([Roles::ADMIN]);
+
+		$games = $request->input('games');
+
+		foreach ($games as $game) {
+			BracketDao::saveBracketGame($game);
+
+			if ($game['pool_entry_1_score'] && $game['pool_entry_2_score']) {
+				$winnerId = intval($game['pool_entry_1_score']) > intval($game['pool_entry_2_score']) ? $game['pool_entry_1_id'] : $game['pool_entry_2_id'];
+
+				BracketDao::updateBracketGame(['pool_entry_1_id' => $winnerId], ['prev_bracket_game_1_id' => $game['id']]);
+				BracketDao::updateBracketGame(['pool_entry_2_id' => $winnerId], ['prev_bracket_game_2_id' => $game['id']]);
+			}
+		}
+		echo json_encode(['success' => 'success']);
+	}
 }

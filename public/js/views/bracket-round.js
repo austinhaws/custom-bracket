@@ -12,6 +12,19 @@ var GamesList = React.createClass({
 
 		this.setState({games:this.state.games});
 	},
+	saveGames: function() {
+		$.ajax({
+			url: 'admin/bracket/score/save',
+			dataType: 'json',
+			data: csrf({games: this.state.games}),
+			cache: false,
+			method: 'post',
+			success: function(data) {
+				// show a spinner instead
+				alert('saved');
+			}.bind(this),
+		});
+	},
 	render: function() {
 		var that = this;
 		var games = this.state.games.map(function(game) {
@@ -23,6 +36,7 @@ var GamesList = React.createClass({
 			<div>
 				<h2>Round {this.props.round}</h2>
 				{games}
+				<button onClick={this.saveGames}>Save</button>
 			</div>
 		);
 	}
@@ -55,8 +69,8 @@ var Game = React.createClass({
 		});
 		return (
 			<div className="game">
-				<span className="team-name">{team1Name}</span> <input type="text" value={this.state.pool_entry_1_score} onChange={this.scoreChanged} data-team="1"/><br/>
-				<span className="team-name">{team2Name}</span> <input type="text" value={this.state.pool_entry_2_score} onChange={this.scoreChanged} data-team="2"/><br/>
+				<div className="team"><div className="team-name">{team1Name}</div> <input type="text" value={this.state.pool_entry_1_score} onChange={this.scoreChanged} data-team="1"/></div>
+				<div className="team"><div className="team-name">{team2Name}</div> <input type="text" value={this.state.pool_entry_2_score} onChange={this.scoreChanged} data-team="2"/></div>
 			</div>
 		)
 	}
@@ -64,6 +78,9 @@ var Game = React.createClass({
 
 var teams = globals.pools[0].teams.concat(globals.pools[1].teams.concat(globals.pools[2].teams.concat(globals.pools[3].teams.concat())));
 ReactDOM.render(
-	<GamesList initialGames={globals.games} round={globals.round} teams={teams}/>,
+	<div>
+		<a href={'admin/bracket/' + globals.bracket.id}>Back To Bracket</a>
+		<GamesList initialGames={globals.games} round={globals.round} teams={teams}/>
+	</div>,
 	document.getElementById('bracket-round')
 );

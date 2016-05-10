@@ -35,4 +35,9 @@ class BracketDao
 			$bracketGame['id'] = DB::table('bracket_games')->insertGetId($bracketGame);
 		}
 	}
+
+	public static function updateBracketGame($data, $where)
+	{
+		DB::table('bracket_games')->where($where)->update($data);
+	}
 }
