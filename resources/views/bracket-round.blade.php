@@ -6,6 +6,7 @@
         globals.pools = <?=$pools?>;
         globals.games = <?=$games?>;
         globals.round = <?=$round?>;
+        globals.rolls = <?=$rolls?>;
     </script>
 
     <div id="bracket-round"></div>
@@ -13,7 +14,7 @@
     <script type="text/babel" src="js/views/bracket-round.js"></script>
     <style>
         #bracket-round {
-            width: 400px;
+            width: 600px;
             margin: 0 auto;
         }
         .game {

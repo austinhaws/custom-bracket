@@ -40,4 +40,18 @@ class BracketDao
 	{
 		DB::table('bracket_games')->where($where)->update($data);
 	}
+
+	public static function rankRollsForBracketId($bracketId) {
+		return DB::table('bracket_rolls')->where(['bracket_id' => $bracketId])->get();
+	}
+
+	public static function saveBracketRolls($bracketId, &$rolls) {
+		DB::table('bracket_rolls')->where(['bracket_id' => $bracketId])->delete();
+		
+		foreach ($rolls as $key => $DONTCARE) {
+			$roll =& $rolls[$key];
+			$roll['bracket_id'] = $bracketId;
+			$roll['id'] = DB::table('bracket_rolls')->insertGetId($roll);
+		}
+	}
 }

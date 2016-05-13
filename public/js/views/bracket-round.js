@@ -29,7 +29,7 @@ var GamesList = React.createClass({
 		var that = this;
 		var games = this.state.games.map(function(game) {
 			return (
-				<Game game={game} teams={that.props.teams} key={game.id} scoreChanged={that.scoreChanged}/>
+				<Game game={game} teams={that.props.teams} rolls={that.props.rolls} key={game.id} scoreChanged={that.scoreChanged}/>
 			);
 		});
 		return (
@@ -67,10 +67,19 @@ var Game = React.createClass({
 				team2Name = team.name;
 			}
 		});
+		var team1Roll, team2Roll;
+		this.props.rolls.forEach(function(roll) {
+			if (roll.rank == state.pool_entry_1_rank) {
+				team1Roll = roll.roll;
+			}
+			if (roll.rank == state.pool_entry_2_rank) {
+				team2Roll = roll.roll;
+			}
+		});
 		return (
 			<div className="game">
-				<div className="team"><div className="team-name">{team1Name}</div> <input type="text" value={this.state.pool_entry_1_score} onChange={this.scoreChanged} data-team="1"/></div>
-				<div className="team"><div className="team-name">{team2Name}</div> <input type="text" value={this.state.pool_entry_2_score} onChange={this.scoreChanged} data-team="2"/></div>
+				<div className="team"><div className="team-name">{team1Name} ({this.state.pool_entry_1_rank} : {team1Roll})</div> <input type="text" value={this.state.pool_entry_1_score} onChange={this.scoreChanged} data-team="1"/></div>
+				<div className="team"><div className="team-name">{team2Name} ({this.state.pool_entry_2_rank} : {team2Roll})</div> <input type="text" value={this.state.pool_entry_2_score} onChange={this.scoreChanged} data-team="2"/></div>
 			</div>
 		)
 	}
@@ -80,7 +89,7 @@ var teams = globals.pools[0].teams.concat(globals.pools[1].teams.concat(globals.
 ReactDOM.render(
 	<div>
 		<a href={'admin/bracket/' + globals.bracket.id}>Back To Bracket</a>
-		<GamesList initialGames={globals.games} round={globals.round} teams={teams}/>
+		<GamesList initialGames={globals.games} round={globals.round} teams={teams} rolls={globals.rolls}/>
 	</div>,
 	document.getElementById('bracket-round')
 );

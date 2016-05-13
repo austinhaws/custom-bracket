@@ -4,6 +4,7 @@
     <script>
         globals.bracket = <?=$bracket?>;
         globals.pools = <?=$pools?>;
+        globals.rolls = <?=$rolls?>;
     </script>
 
     <div id="bracket-form"></div>

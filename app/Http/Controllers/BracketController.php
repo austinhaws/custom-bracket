@@ -58,9 +58,41 @@ class BracketController extends Controller
 	private function editBracketView($bracket)
 	{
 		Roles::checkIsRole([Roles::ADMIN]);
+
+		// test for no id and then for null rolls
+		if ($bracket['id']) {
+			$rolls = BracketDao::rankRollsForBracketId($bracket['id']);
+			if (!$rolls) {
+				$rolls = false;
+			}
+		} else {
+			$rolls = false;
+		}
+		
+		if (!$rolls || !count($rolls)) {
+			$rolls = [
+				['rank' => 1, 'roll' => '1d20 + 5d6'],
+				['rank' => 2, 'roll' => '1d20 + 5d6'],
+				['rank' => 3, 'roll' => '1d20 + 4d6'],
+				['rank' => 4, 'roll' => '1d20 + 4d6'],
+				['rank' => 5, 'roll' => '1d20 + 3d6'],
+				['rank' => 6, 'roll' => '1d20 + 3d6'],
+				['rank' => 7, 'roll' => '1d20 + 2d6'],
+				['rank' => 8, 'roll' => '1d20 + 2d6'],
+				['rank' => 9, 'roll' => '1d20 + 2d6'],
+				['rank' => 10, 'roll' => '1d20 + 2d6'],
+				['rank' => 11, 'roll' => '1d20 + 2d6'],
+				['rank' => 12, 'roll' => '1d20 + 2d6'],
+				['rank' => 13, 'roll' => '1d20 + 1d6'],
+				['rank' => 14, 'roll' => '1d20 + 1d6'],
+				['rank' => 15, 'roll' => '1d20 + 0'],
+				['rank' => 16, 'roll' => '1d20 + 0'],
+			];
+		}
 		return view('bracket-edit', [
 			'bracket' => json_encode($bracket),
 			'pools' => json_encode(Pool::orderBy('name', 'asc')->get()),
+			'rolls' => json_encode($rolls)
 		]);
 	}
 
@@ -68,35 +100,26 @@ class BracketController extends Controller
 	{
 		Roles::checkIsRole([Roles::ADMIN]);
 
-		$bracket = [
-			'id' => $request->input('id'),
-			'name' => $request->input('name'),
-			'open_date' => $request->input('open_date'),
-			'first_round_date' => $request->input('first_round_date'),
-			'second_round_date' => $request->input('second_round_date'),
-			'third_round_date' => $request->input('third_round_date'),
-			'fourth_round_date' => $request->input('fourth_round_date'),
-			'fifth_round_date' => $request->input('fifth_round_date'),
-			'sixth_round_date' => $request->input('sixth_round_date'),
-			'top_left_pool_id' => $request->input('top_left_pool_id'),
-			'top_right_pool_id' => $request->input('top_right_pool_id'),
-			'bottom_left_pool_id' => $request->input('bottom_left_pool_id'),
-			'bottom_right_pool_id' => $request->input('bottom_right_pool_id'),
-		];
+		$bracket = $request->input('bracket');
 		BracketDao::saveBracket($bracket);
+
+		$rolls = $request->input('rolls');
+		BracketDao::saveBracketRolls($bracket['id'], $rolls);
 
 		return json_encode($bracket);
 	}
 
-	private function newGame($bracketId, $round, $team1Id, $team2Id, $prevGameId1, $prevGameId2) {
+	private function newGame($bracketId, $round, $team1Id, $team2Id, $prevGameId1, $prevGameId2, $rank1, $rank2) {
 		$game = [
 			'id' => false,
 			'round' => $round,
 			'bracket_id' => $bracketId,
 			'pool_entry_1_id' => $team1Id,
 			'pool_entry_1_score' => null,
+			'pool_entry_1_rank' => $rank1,
 			'pool_entry_2_id' => $team2Id,
 			'pool_entry_2_score' => null,
+			'pool_entry_2_rank' => $rank2,
 			'prev_bracket_game_1_id' => $prevGameId1,
 			'prev_bracket_game_2_id' => $prevGameId2,
 		];
@@ -118,7 +141,7 @@ class BracketController extends Controller
 			['id' => $bracket->top_right_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->top_right_pool_id)],
 			['id' => $bracket->bottom_right_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_right_pool_id)],
 		];
-
+		
 		// if there are no current games, create them from the previous games
 		if (!$games) {
 			foreach ($pools as $key => $stupid) {
@@ -133,38 +156,38 @@ class BracketController extends Controller
 
 				// create games from the ranks
 				$pool['games'][1] = [
-					$this->newGame($bracketId, 1, $pool['teams'][0]->id, $pool['teams'][15]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][1]->id, $pool['teams'][14]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][2]->id, $pool['teams'][13]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][3]->id, $pool['teams'][12]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][4]->id, $pool['teams'][11]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][5]->id, $pool['teams'][10]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][6]->id, $pool['teams'][9]->id, null, null),
-					$this->newGame($bracketId, 1, $pool['teams'][7]->id, $pool['teams'][8]->id, null, null),
+					$this->newGame($bracketId, 1, $pool['teams'][0]->id, $pool['teams'][15]->id, null, null, 1, 16),
+					$this->newGame($bracketId, 1, $pool['teams'][1]->id, $pool['teams'][14]->id, null, null, 2, 15),
+					$this->newGame($bracketId, 1, $pool['teams'][2]->id, $pool['teams'][13]->id, null, null, 3, 14),
+					$this->newGame($bracketId, 1, $pool['teams'][3]->id, $pool['teams'][12]->id, null, null, 4, 13),
+					$this->newGame($bracketId, 1, $pool['teams'][4]->id, $pool['teams'][11]->id, null, null, 5, 12),
+					$this->newGame($bracketId, 1, $pool['teams'][5]->id, $pool['teams'][10]->id, null, null, 6, 11),
+					$this->newGame($bracketId, 1, $pool['teams'][6]->id, $pool['teams'][9]->id, null, null, 7, 10),
+					$this->newGame($bracketId, 1, $pool['teams'][7]->id, $pool['teams'][8]->id, null, null, 8, 9),
 				];
 				$pool['games'][2] = [
-					$this->newGame($bracketId, 2, null, null, $pool['games'][1][0]['id'], $pool['games'][1][1]['id']),
-					$this->newGame($bracketId, 2, null, null, $pool['games'][1][2]['id'], $pool['games'][1][3]['id']),
-					$this->newGame($bracketId, 2, null, null, $pool['games'][1][4]['id'], $pool['games'][1][5]['id']),
-					$this->newGame($bracketId, 2, null, null, $pool['games'][1][6]['id'], $pool['games'][1][7]['id']),
+					$this->newGame($bracketId, 2, null, null, $pool['games'][1][0]['id'], $pool['games'][1][1]['id'], null, null),
+					$this->newGame($bracketId, 2, null, null, $pool['games'][1][2]['id'], $pool['games'][1][3]['id'], null, null),
+					$this->newGame($bracketId, 2, null, null, $pool['games'][1][4]['id'], $pool['games'][1][5]['id'], null, null),
+					$this->newGame($bracketId, 2, null, null, $pool['games'][1][6]['id'], $pool['games'][1][7]['id'], null, null),
 				];
 				$pool['games'][3] = [
-					$this->newGame($bracketId, 3, null, null, $pool['games'][2][0]['id'], $pool['games'][2][1]['id']),
-					$this->newGame($bracketId, 3, null, null, $pool['games'][2][2]['id'], $pool['games'][2][3]['id']),
+					$this->newGame($bracketId, 3, null, null, $pool['games'][2][0]['id'], $pool['games'][2][1]['id'], null, null),
+					$this->newGame($bracketId, 3, null, null, $pool['games'][2][2]['id'], $pool['games'][2][3]['id'], null, null),
 				];
 				$pool['games'][4] = [
-					$this->newGame($bracketId, 4, null, null, $pool['games'][3][0]['id'], $pool['games'][3][1]['id']),
+					$this->newGame($bracketId, 4, null, null, $pool['games'][3][0]['id'], $pool['games'][3][1]['id'], null, null),
 				];
 			}
 
 			// pools have their games created, create final 4, championship games
 			$finalFour = [
-				$this->newGame($bracketId, 5, null, null, $pools[0]['games'][4][0]['id'], $pools[1]['games'][4][0]['id']),
-				$this->newGame($bracketId, 5, null, null, $pools[2]['games'][4][0]['id'], $pools[3]['games'][4][0]['id']),
+				$this->newGame($bracketId, 5, null, null, $pools[0]['games'][4][0]['id'], $pools[1]['games'][4][0]['id'], null, null),
+				$this->newGame($bracketId, 5, null, null, $pools[2]['games'][4][0]['id'], $pools[3]['games'][4][0]['id'], null, null),
 			];
 
 			$championship = [
-				$this->newGame($bracketId, 6, null, null, $finalFour[0]['id'], $finalFour[1]['id']),
+				$this->newGame($bracketId, 6, null, null, $finalFour[0]['id'], $finalFour[1]['id'], null, null),
 			];
 
 			// clear out data for json encode
@@ -177,11 +200,13 @@ class BracketController extends Controller
 		}
 
 		// games are now loaded so send them on to the view
+		$rolls = BracketDao::rankRollsForBracketId($bracketId);
 		return view('bracket-round', [
 			'bracket' => json_encode($bracket),
 			'round' => $round,
 			'games' => json_encode($games),
 			'pools' => json_encode($pools),
+			'rolls' => json_encode($rolls),
 		]);
 	}
 
@@ -194,10 +219,17 @@ class BracketController extends Controller
 			BracketDao::saveBracketGame($game);
 
 			if ($game['pool_entry_1_score'] && $game['pool_entry_2_score']) {
-				$winnerId = intval($game['pool_entry_1_score']) > intval($game['pool_entry_2_score']) ? $game['pool_entry_1_id'] : $game['pool_entry_2_id'];
+				if (intval($game['pool_entry_1_score']) > intval($game['pool_entry_2_score'])) {
+					$winnerId = $game['pool_entry_1_id'];
+					$rank = $game['pool_entry_1_rank'];
+				} else {
+					$winnerId = $game['pool_entry_2_id'];
+					$rank = $game['pool_entry_2_rank'];
 
-				BracketDao::updateBracketGame(['pool_entry_1_id' => $winnerId, 'pool_entry_1_score' => null], ['prev_bracket_game_1_id' => $game['id']]);
-				BracketDao::updateBracketGame(['pool_entry_2_id' => $winnerId, 'pool_entry_2_score' => null], ['prev_bracket_game_2_id' => $game['id']]);
+				}
+
+				BracketDao::updateBracketGame(['pool_entry_1_id' => $winnerId, 'pool_entry_1_score' => null, 'pool_entry_1_rank' => $rank], ['prev_bracket_game_1_id' => $game['id']]);
+				BracketDao::updateBracketGame(['pool_entry_2_id' => $winnerId, 'pool_entry_2_score' => null, 'pool_entry_2_rank' => $rank], ['prev_bracket_game_2_id' => $game['id']]);
 			}
 		}
 		echo json_encode(['success' => 'success']);
