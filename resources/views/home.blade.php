@@ -11,10 +11,14 @@
                     <div class="panel-body">
                         <div id="poolsBox"></div>
                     </div>
+                    <div id="bracketsBox"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script type="text/babel" src="js/views/pools.js"></script>
+    <script>
+        globals.brackets = <? echo $brackets;?>;
+    </script>
 @endsection
