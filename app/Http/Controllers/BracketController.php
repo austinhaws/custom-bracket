@@ -157,13 +157,13 @@ class BracketController extends Controller
 				// create games from the ranks
 				$pool['games'][1] = [
 					$this->newGame($bracketId, 1, $pool['teams'][0]->id, $pool['teams'][15]->id, null, null, 1, 16),
-					$this->newGame($bracketId, 1, $pool['teams'][1]->id, $pool['teams'][14]->id, null, null, 2, 15),
-					$this->newGame($bracketId, 1, $pool['teams'][2]->id, $pool['teams'][13]->id, null, null, 3, 14),
-					$this->newGame($bracketId, 1, $pool['teams'][3]->id, $pool['teams'][12]->id, null, null, 4, 13),
-					$this->newGame($bracketId, 1, $pool['teams'][4]->id, $pool['teams'][11]->id, null, null, 5, 12),
-					$this->newGame($bracketId, 1, $pool['teams'][5]->id, $pool['teams'][10]->id, null, null, 6, 11),
-					$this->newGame($bracketId, 1, $pool['teams'][6]->id, $pool['teams'][9]->id, null, null, 7, 10),
 					$this->newGame($bracketId, 1, $pool['teams'][7]->id, $pool['teams'][8]->id, null, null, 8, 9),
+					$this->newGame($bracketId, 1, $pool['teams'][4]->id, $pool['teams'][11]->id, null, null, 5, 12),
+					$this->newGame($bracketId, 1, $pool['teams'][3]->id, $pool['teams'][12]->id, null, null, 4, 13),
+					$this->newGame($bracketId, 1, $pool['teams'][5]->id, $pool['teams'][10]->id, null, null, 6, 11),
+					$this->newGame($bracketId, 1, $pool['teams'][2]->id, $pool['teams'][13]->id, null, null, 3, 14),
+					$this->newGame($bracketId, 1, $pool['teams'][6]->id, $pool['teams'][9]->id, null, null, 7, 10),
+					$this->newGame($bracketId, 1, $pool['teams'][1]->id, $pool['teams'][14]->id, null, null, 2, 15),
 				];
 				$pool['games'][2] = [
 					$this->newGame($bracketId, 2, null, null, $pool['games'][1][0]['id'], $pool['games'][1][1]['id'], null, null),
