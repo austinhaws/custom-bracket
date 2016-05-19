@@ -25,7 +25,11 @@ class BracketDao
 	}
 	
 	public static function selectBracketGames($bracketId, $round) {
-		return DB::table('bracket_games')->where(['round' => $round, 'bracket_id' => $bracketId])->get();
+		$where = ['bracket_id' => $bracketId];
+		if ($round) {
+			$where['round'] = $round;
+		}
+		return DB::table('bracket_games')->where($where)->get();
 	}
 
 	public static function saveBracketGame(&$bracketGame) {

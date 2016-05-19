@@ -58,21 +58,32 @@ ReactDOM.render(
 
 
 var BracketsBox = React.createClass({
+	getInitialState: function() {
+		return {brackets: []};
+	},
+	componentDidMount: function() {
+		$.ajax({
+			url: 'bracket/list',
+			dataType: 'json',
+			cache: false,
+			success: function(data) {
+				this.setState({brackets: data});
+		}.bind(this),
+		error: function(xhr, status, err) {
+			console.error(this.props.url, status, err.toString());
+		}.bind(this)
+	});
+
+	},
 	render: function() {
-		var bracketNodes = this.props.brackets.map(function(bracket) {
+		var bracketNodes = this.state.brackets.map(function(bracket) {
 			return (
 				<Bracket key={bracket.id} bracket={bracket}/>
 			);
 		});
 		return (
-			<div>
-				<div class="panel-heading">Brackets</div>
-
-				<div class="panel-body">
-					<div id="brackets-list">
-						{bracketNodes}
-					</div>
-				</div>
+			<div id="brackets-list">
+				{bracketNodes}
 			</div>
 		);
 	}
@@ -91,6 +102,6 @@ var Bracket = React.createClass({
 });
 
 ReactDOM.render(
-	<BracketsBox brackets={globals.brackets}/>,
+	<BracketsBox/>,
 	document.getElementById('bracketsBox')
 );

@@ -51,6 +51,8 @@ Route::post('/pool/enterTeam', 'PoolController@enterTeam');
 
 Route::get('/bracket/list', 'BracketController@ajaxList');
 
+Route::get('/bracket/{id}', 'BracketController@bracketPicks');
+
 // Admin
 Route::get('/admin', 'AdminController@index');
 Route::get('/admin/pool/add', 'PoolController@poolAdd');

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Dao\BracketDao;
 use App\Http\Requests;
-use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {

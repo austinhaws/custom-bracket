@@ -13,12 +13,13 @@ class PoolDao
 				pool_entries.pool_id pool_id,
 				pool_entries.id id,
 				pool_entries.name name,
+				pool_entries.rank rank,
 				(select count(*) from user_x_pool_team_entries uxpte where uxpte.pool_entry_id = pool_entries.id) votes
 			from pool_entries
-			left join user_x_pool_team_entries 
-				on user_x_pool_team_entries.pool_entry_id = pool_entries.id 
+			left join user_x_pool_team_entries on user_x_pool_team_entries.pool_entry_id = pool_entries.id
 			where pool_id = ?
 			order by votes desc, lower(name) asc
+			limit 16
 		', [$poolId]);
 	}
 
@@ -62,5 +63,17 @@ class PoolDao
 
 	public static function insertPoolTeam($team) {
 		DB::table('pool_entries')->insert($team);
+	}
+	
+	public static function selectPools($where) {
+		return DB::table('pools')->where($where)->get();
+	}
+
+	public static function savePoolEntry(&$poolEntry) {
+		if ($poolEntry['id']) {
+			DB::table('pool_entries')->where('id', $poolEntry['id'])->update($poolEntry);
+		} else {
+			$poolEntry['id'] = DB::table('pool_entries')->insertGetId($poolEntry);
+		}
 	}
 }
