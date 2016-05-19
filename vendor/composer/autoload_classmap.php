@@ -523,5 +523,6 @@ return array(
     'SebastianBergmann\\Version' => $vendorDir . '/sebastian/version/src/Version.php',
     'TestCase' => $baseDir . '/tests/TestCase.php',
     'Text_Template' => $vendorDir . '/phpunit/php-text-template/src/Template.php',
+    'UserBracketPicks' => $baseDir . '/database/migrations/2016_05_19_201239_user_bracket_picks.php',
     'UserRoles' => $baseDir . '/database/migrations/2016_05_02_114145_user_roles.php',
 );

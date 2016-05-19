@@ -58,4 +58,21 @@ class BracketDao
 			$roll['id'] = DB::table('bracket_rolls')->insertGetId($roll);
 		}
 	}
+
+	public static function saveUserBracketGame($data) {
+		$bracketGame = DB::table('user_x_bracket_games')->where(['user_id' => $data['user_id'], 'bracket_game_id' => $data['bracket_game_id']])->get();
+		if ($bracketGame && count($bracketGame)) {
+			DB::table('user_x_bracket_games')->where(['id' => $bracketGame[0]->id])->update($data);
+		} else {
+			DB::table('user_x_bracket_games')->insert($data);
+		}
+	}
+
+	public static function selectBracketGame($where) {
+		return DB::table('bracket_games')->where($where)->get();
+	}
+
+	public static function selectUserBracketGames($where) {
+		return DB::table('user_x_bracket_games')->where($where)->get();
+	}
 }

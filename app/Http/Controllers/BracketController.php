@@ -286,11 +286,15 @@ class BracketController extends Controller
 			'bottom_right' => PoolDao::selectPools(['id' => $bracket->bottom_right_pool_id])[0],
 		];
 
+		// what has the user picked so far?
+		$picks = BracketDao::selectUserBracketGames(['user_id' => Auth::user()->id]);
+
 		return view('bracket-pick', [
 			'bracket' => json_encode($bracket),
 			'games' => json_encode($games),
 			'pools' => json_encode($pools),
 			'teams' => json_encode($teams),
+			'picks' => json_encode($picks),
 		]);
 	}
 
@@ -322,4 +326,39 @@ class BracketController extends Controller
 		});
 		return $teams;
 	}
+	
+	public function bracketPick(Request $request) {
+		$bracketGameId = $request->input('bracketGameId');
+
+		// save the pick
+		$data = [
+			'user_id' => Auth::user()->id,
+			'bracket_game_id' => $bracketGameId,
+			'pool_entry_winner_id' => $request->input('poolEntryWinnerId'),
+		];
+		BracketDao::saveUserBracketGame($data);
+
+		// get future game and set it's pool_entry_X_id for the winner
+		// prev bracket game 1 id
+		$prevBracketGame = BracketDao::selectBracketGame(['prev_bracket_game_1_id' => $bracketGameId]);
+		if ($prevBracketGame && count($prevBracketGame)) {
+			BracketDao::saveUserBracketGame([
+				'user_id' => Auth::user()->id,
+				'bracket_game_id' => $prevBracketGame[0]->id,
+				'pool_entry_1_id' => $request->input('poolEntryWinnerId'),
+			]);
+		}
+		
+		// prev bracket game 2 id
+		$prevBracketGame = BracketDao::selectBracketGame(['prev_bracket_game_2_id' => $bracketGameId]);
+		if ($prevBracketGame && count($prevBracketGame)) {
+			BracketDao::saveUserBracketGame([
+				'user_id' => Auth::user()->id,
+				'bracket_game_id' => $prevBracketGame[0]->id,
+				'pool_entry_2_id' => $request->input('poolEntryWinnerId'),
+			]);
+		}
+
+		echo json_encode(['success' => 'success']);
+	}	
 }

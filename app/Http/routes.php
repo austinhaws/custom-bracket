@@ -51,7 +51,11 @@ Route::post('/pool/enterTeam', 'PoolController@enterTeam');
 
 Route::get('/bracket/list', 'BracketController@ajaxList');
 
+// load the bracket picker view for the user to pick on
 Route::get('/bracket/{id}', 'BracketController@bracketPicks');
+
+// make a bracket pick
+Route::post('/bracket/pick', 'BracketController@bracketPick');
 
 // Admin
 Route::get('/admin', 'AdminController@index');
