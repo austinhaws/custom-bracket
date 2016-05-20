@@ -14,7 +14,8 @@ var BracketPick = React.createClass({
 			bracket: this.props.dataStore.bracket,
 			games: this.props.dataStore.games,
 			pools: this.props.dataStore.pools,
-			teams: this.props.dataStore.teams
+			teams: this.props.dataStore.teams,
+			picks: this.props.dataStore.picks
 		};
 	},
 	onTeamPick: function(bracketGameId, poolEntryWinnerId) {
@@ -23,13 +24,11 @@ var BracketPick = React.createClass({
 			dataType: 'json',
 			data: csrf({bracketGameId: bracketGameId, poolEntryWinnerId: poolEntryWinnerId}),
 			cache: false,
-			method: 'post'
-		});
-		// update game state
-		this.state.games.forEach(function(game) {
-			if (game.id == bracketGameId) {
-				console.log('where to put the new state data');
-			}
+			method: 'post',
+			success: function(data) {
+				// set picks state
+				this.setState({picks: data});
+			}.bind(this)
 		});
 	},
 	render: function() {
@@ -38,11 +37,11 @@ var BracketPick = React.createClass({
 		}
 		return (
 			<div className="tournament">
-				<BracketSection teams={this.state.teams.top_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_left.id)} onTeamPick={this.onTeamPick}/>
-				<BracketSection teams={this.state.teams.bottom_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_left.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection picks={this.state.picks} teams={this.state.teams.top_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_left.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection picks={this.state.picks} teams={this.state.teams.bottom_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_left.id)} onTeamPick={this.onTeamPick}/>
 		
-				<BracketSection teams={this.state.teams.top_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_right.id)} onTeamPick={this.onTeamPick}/>
-				<BracketSection teams={this.state.teams.bottom_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_right.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection picks={this.state.picks} teams={this.state.teams.top_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_right.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection picks={this.state.picks} teams={this.state.teams.bottom_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_right.id)} onTeamPick={this.onTeamPick}/>
 			</div>
 		);
 	}
@@ -54,7 +53,8 @@ var BracketSection = React.createClass({
 	propTypes: {
 		teams: React.PropTypes.array.isRequired,
 		games: React.PropTypes.array.isRequired,
-		onTeamPick: React.PropTypes.func.isRequired
+		onTeamPick: React.PropTypes.func.isRequired,
+		picks: React.PropTypes.array.isRequired
 	},
 	render: function() {
 		function filterGamesByRound(game) {
@@ -71,10 +71,10 @@ var BracketSection = React.createClass({
 				<div className="teams-list">
 					{teamList}
 				</div>
-				<BracketRound games={this.props.games.filter(filterGamesByRound, 1)} key="1" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
-				<BracketRound games={this.props.games.filter(filterGamesByRound, 2)} key="2" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
-				<BracketRound games={this.props.games.filter(filterGamesByRound, 3)} key="3" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
-				<BracketRound games={this.props.games.filter(filterGamesByRound, 4)} key="4" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
+				<BracketRound picks={this.props.picks} games={this.props.games.filter(filterGamesByRound, 1)} key="1" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
+				<BracketRound picks={this.props.picks} games={this.props.games.filter(filterGamesByRound, 2)} key="2" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
+				<BracketRound picks={this.props.picks} games={this.props.games.filter(filterGamesByRound, 3)} key="3" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
+				<BracketRound picks={this.props.picks} games={this.props.games.filter(filterGamesByRound, 4)} key="4" teams={this.props.teams} onTeamPick={this.props.onTeamPick}/>
 			</div>
 		)
 	}
@@ -85,7 +85,8 @@ var BracketRound = React.createClass({
 	propTypes : {
 		games : React.PropTypes.array.isRequired,
 		teams : React.PropTypes.array.isRequired,
-		onTeamPick: React.PropTypes.func.isRequired
+		onTeamPick: React.PropTypes.func.isRequired,
+		picks : React.PropTypes.array.isRequired
 	},
 	render: function() {
 		// need to check if a game is picked or not to determine if showing a menu or static text
@@ -94,11 +95,30 @@ var BracketRound = React.createClass({
 		}
 		var that = this;
 		var gameNodes = this.props.games.map(function(game) {
-			var team1 = that.props.teams.filter(findTeamById, game.pool_entry_1_id)[0];
-			var team2 = that.props.teams.filter(findTeamById, game.pool_entry_2_id)[0];
-// need to send in selectedTeamId which comes from new table and use it in the onteampickc allback in gamepicker
+			var correctTeam1 = that.props.teams.filter(findTeamById, game.pool_entry_1_id)[0];
+			var correctTeam2 = that.props.teams.filter(findTeamById, game.pool_entry_2_id)[0];
+			var team1, team2;
+			var winnerId;
+			var pick;
+			pick = that.props.picks.filter(function(pick) {
+				return pick.bracket_game_id == game.id;
+			})[0];
+			if (pick) {
+				team1 = that.props.teams.filter(findTeamById, pick.pool_entry_1_id)[0];
+				team2 = that.props.teams.filter(findTeamById, pick.pool_entry_2_id)[0];
+				winnerId = pick.pool_entry_winner_id;
+			} else {
+				if (game.round == 1) {
+					team1 = correctTeam1;
+					team2 = correctTeam2;
+				} else {
+					team1 = undefined;
+					team2 = undefined;
+				}
+				winnerId = undefined;
+			}
 			return (
-				<GamePicker key={game.id} team1={team1} team2={team2} selectedTeamId={game.id} gameId={game.id} onTeamPick={that.props.onTeamPick}/>
+				<GamePicker key={game.id} team1={team1} team2={team2} correctTeam1={correctTeam1} correctTeam2={correctTeam2} selectedTeamId={winnerId} gameId={game.id} onTeamPick={that.props.onTeamPick}/>
 			);
 		});
 		return (
@@ -121,7 +141,9 @@ var GamePicker = React.createClass({
 	propTypes: {
 		team1: React.PropTypes.object,
 		team2: React.PropTypes.object,
-		selectedTeamId: React.PropTypes.number.isRequired,
+		correctTeam1: React.PropTypes.object,
+		correctTeam2: React.PropTypes.object,
+		selectedTeamId: React.PropTypes.number,
 		onTeamPick: React.PropTypes.func.isRequired,
 		gameId: React.PropTypes.number.isRequired
 	},

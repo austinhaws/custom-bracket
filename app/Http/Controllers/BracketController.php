@@ -336,6 +336,14 @@ class BracketController extends Controller
 			'bracket_game_id' => $bracketGameId,
 			'pool_entry_winner_id' => $request->input('poolEntryWinnerId'),
 		];
+	
+		// first round picks get the 1st round's initial teams
+		$bracketGame = BracketDao::selectBracketGame(['id' => $bracketGameId])[0];
+		if ($bracketGame->round == 1) {
+			$data['pool_entry_1_id'] = $bracketGame->pool_entry_1_id;
+			$data['pool_entry_2_id'] = $bracketGame->pool_entry_2_id;
+		}
+		
 		BracketDao::saveUserBracketGame($data);
 
 		// get future game and set it's pool_entry_X_id for the winner
@@ -359,6 +367,7 @@ class BracketController extends Controller
 			]);
 		}
 
-		echo json_encode(['success' => 'success']);
+		// return all the picks for the user since one pick can effect the others
+		echo json_encode(BracketDao::selectUserBracketGames(['user_id' => Auth::user()->id]));
 	}	
 }

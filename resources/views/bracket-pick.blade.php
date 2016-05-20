@@ -6,7 +6,8 @@
               bracket: <? echo $bracket; ?>,
               games: <? echo $games; ?>,
               pools: <? echo $pools; ?>,
-              teams: <? echo $teams; ?>
+              teams: <? echo $teams; ?>,
+              picks: <? echo $picks; ?>
         };
     </script>
 
