@@ -163,8 +163,8 @@ var GamePicker = React.createClass({
 			<div>
 				<select defaultValue={this.props.selectedTeamId} onChange={this.onWinnerPick}>
 					<option></option>
-					<option value={team_one.id}>{team_one.name}</option>
-					<option value={team_two.id}>{team_two.name}</option>
+					<option value={team_one.id}>{team_one.name} ({team_one.rank})</option>
+					<option value={team_two.id}>{team_two.name} ({team_two.rank})</option>
 				</select>
 			</div>
 		)
