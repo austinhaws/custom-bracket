@@ -40,11 +40,11 @@ var BracketPick = React.createClass({
 		}
 		return (
 			<div className="tournament">
-				<BracketSection picks={this.state.picks} teams={this.state.teams.top_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_left.id)} onTeamPick={this.onTeamPick}/>
-				<BracketSection picks={this.state.picks} teams={this.state.teams.bottom_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_left.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection pool={this.state.pools.top_left} picks={this.state.picks} teams={this.state.teams.top_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_left.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection pool={this.state.pools.bottom_left} picks={this.state.picks} teams={this.state.teams.bottom_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_left.id)} onTeamPick={this.onTeamPick}/>
 		
-				<BracketSection picks={this.state.picks} teams={this.state.teams.top_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_right.id)} onTeamPick={this.onTeamPick}/>
-				<BracketSection picks={this.state.picks} teams={this.state.teams.bottom_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_right.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection pool={this.state.pools.top_right} picks={this.state.picks} teams={this.state.teams.top_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_right.id)} onTeamPick={this.onTeamPick}/>
+				<BracketSection pool={this.state.pools.bottom_right} picks={this.state.picks} teams={this.state.teams.bottom_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_right.id)} onTeamPick={this.onTeamPick}/>
 				<BracketFinalFourWinner picks={this.state.picks} teams={this.state.teams} games={this.state.games.filter(filterGamesByRound, [5, 6])} onTeamPick={this.onTeamPick}/>
 			</div>
 		);
@@ -58,7 +58,8 @@ var BracketSection = React.createClass({
 		teams: React.PropTypes.array.isRequired,
 		games: React.PropTypes.array.isRequired,
 		onTeamPick: React.PropTypes.func.isRequired,
-		picks: React.PropTypes.array.isRequired
+		picks: React.PropTypes.array.isRequired,
+		pool: React.PropTypes.object.isRequired
 	},
 	render: function() {
 		function filterGamesByRound(game) {
@@ -72,6 +73,7 @@ var BracketSection = React.createClass({
 		});
 		return (
 			<div className="bracket">
+				<h2>{this.props.pool.name}</h2>
 				<div className="teams-list">
 					{teamList}
 				</div>
@@ -172,7 +174,7 @@ var GamePicker = React.createClass({
 var BracketFinalFourWinner = React.createClass({
 	propTypes: {
 		picks: React.PropTypes.array.isRequired,
-		teams: React.PropTypes.array.isRequired,
+		teams: React.PropTypes.object.isRequired,
 		games: React.PropTypes.array.isRequired,
 		onTeamPick: React.PropTypes.func.isRequired
 	},
@@ -185,7 +187,6 @@ var BracketFinalFourWinner = React.createClass({
 		});
 
 		var teams = this.props.teams.top_left.concat(this.props.teams.bottom_left, this.props.teams.top_right, this.props.teams.bottom_right);
-
 		// show round for for final four
 		// show round for final game
 
