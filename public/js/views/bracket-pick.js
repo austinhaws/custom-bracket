@@ -35,6 +35,9 @@ var BracketPick = React.createClass({
 		function filterGamesByPoolId(game) {
 			return game.pool_id == this;
 		}
+		function filterGamesByRound(game) {
+			return -1 != this.indexOf(game.round);
+		}
 		return (
 			<div className="tournament">
 				<BracketSection picks={this.state.picks} teams={this.state.teams.top_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_left.id)} onTeamPick={this.onTeamPick}/>
@@ -42,6 +45,7 @@ var BracketPick = React.createClass({
 		
 				<BracketSection picks={this.state.picks} teams={this.state.teams.top_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_right.id)} onTeamPick={this.onTeamPick}/>
 				<BracketSection picks={this.state.picks} teams={this.state.teams.bottom_right} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_right.id)} onTeamPick={this.onTeamPick}/>
+				<BracketFinalFourWinner picks={this.state.picks} teams={this.state.teams} games={this.state.games.filter(filterGamesByRound, [5, 6])} onTeamPick={this.onTeamPick}/>
 			</div>
 		);
 	}
@@ -164,6 +168,39 @@ var GamePicker = React.createClass({
 		)
 	}
 });
+
+var BracketFinalFourWinner = React.createClass({
+	propTypes: {
+		picks: React.PropTypes.array.isRequired,
+		teams: React.PropTypes.array.isRequired,
+		games: React.PropTypes.array.isRequired,
+		onTeamPick: React.PropTypes.func.isRequired
+	},
+	render: function() {
+		var final4Games = this.props.games.filter(function(game) {
+			return game.round == 5;
+		});
+		var finalGame = this.props.games.filter(function(game) {
+			return game.round == 6;
+		});
+
+		var teams = this.props.teams.top_left.concat(this.props.teams.bottom_left, this.props.teams.top_right, this.props.teams.bottom_right);
+
+		// show round for for final four
+		// show round for final game
+
+		return (
+			<div>
+				<h2>Final Four</h2>
+				<BracketRound picks={this.props.picks} games={final4Games} key="1" teams={teams} onTeamPick={this.props.onTeamPick}/>
+				<h2>Final</h2>
+				<BracketRound picks={this.props.picks} games={finalGame} key="2" teams={teams} onTeamPick={this.props.onTeamPick}/>
+			</div>
+
+		);
+	}
+});
+
 
 ReactDOM.render(
 	<BracketPick dataStore={globals.dataStore}/>,
