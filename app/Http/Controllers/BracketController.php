@@ -288,13 +288,16 @@ class BracketController extends Controller
 
 		// what has the user picked so far?
 		$picks = BracketDao::selectUserBracketGames(['user_id' => Auth::user()->id]);
-		
+
 		$lockedRounds = BracketDao::selectLockedRounds($bracket->id)[0];
+		list($score, $possible) = $this->scoreBracketPicks($games, $picks);
 		return view('bracket-pick', [
 			'bracket' => json_encode($bracket),
 			'games' => json_encode($games),
 			'pools' => json_encode($pools),
 			'teams' => json_encode($teams),
+			'score' => $score,
+			'possible' => $possible,
 			'picks' => json_encode($picks),
 			'lockedRounds' => json_encode($lockedRounds),
 		]);
@@ -371,5 +374,133 @@ class BracketController extends Controller
 
 		// return all the picks for the user since one pick can effect the others
 		echo json_encode(BracketDao::selectUserBracketGames(['user_id' => Auth::user()->id]));
-	}	
+	}
+
+	/**
+	 * how many points does this bracket have?
+	 *
+	 * @param $games array the played games
+	 * @param $picks array the user's picks
+	 * @return int their current score
+	 */
+	private function scoreBracketPicks($games, &$picks) {
+		// map games to their data for quick lookup
+		$gameWinners = [];
+
+		// which teams lost in which rounds to know if future picks of that same team are bad
+		$loserIdsByRound = [
+			1 => [],
+			2 => [],
+			3 => [],
+			4 => [],
+			5 => [],
+			6 => [],
+		];
+
+		// teamId => rank
+		$ranks = [];
+
+		// load game information about winners
+		foreach ($games as $game) {
+			$ranks[$game->pool_entry_1_id] = $game->pool_entry_1_rank;
+			$ranks[$game->pool_entry_2_id] = $game->pool_entry_2_rank;
+			if ($game->pool_entry_1_score > $game->pool_entry_2_score) {
+				$winnerId = $game->pool_entry_1_id;
+				$loserId = $game->pool_entry_2_id;
+				$upset = $game->pool_entry_1_rank < $game->pool_entry_2_rank;
+			} else if ($game->pool_entry_1_score < $game->pool_entry_2_score) {
+				$winnerId = $game->pool_entry_2_id;
+				$upset = $game->pool_entry_2_rank > $game->pool_entry_1_rank;
+				$loserId = $game->pool_entry_1_id;
+			} else {
+				$loserId = false;
+				$winnerId = false;
+				$upset = false;
+			}
+			if ($winnerId) {
+				$loserIdsByRound[$game->round][] = $loserId;
+			}
+			$gameWinners[$game->id] = [
+				'winnerId' => $winnerId,
+				'round' => $game->round,
+				'upset' => $upset,
+			];
+		}
+
+		// score each pick
+		$score = 0;
+		$possible = 0;
+		foreach ($picks as $pick) {
+			$gameWinner = $gameWinners[$pick->bracket_game_id];
+			$pick->upset = false;
+
+			// check if game has a winner yet (maybe this round isn't played yet
+			if ($gameWinner['winnerId']) {
+				// there is a winner! did they pick right?
+				if ($gameWinner['winnerId'] == $pick->pool_entry_winner_id) {
+					$score += $this->pickScore($gameWinner['round'], $gameWinner['upset']);
+					$pick->upset = $gameWinner['upset'];
+					$pick->correct = 'Y';
+				} else {
+					// they didn't pick right... LOSER!
+					$pick->correct = 'N';
+				}
+			} else {
+				// this game has not yet been played, so see if the team they picked won the previous round
+				$loserFound = false;
+				for ($round = $gameWinner['round']; $round >= 1; $round--) {
+					if (array_search($pick->pool_entry_winner_id, $loserIdsByRound[$round]) !== false) {
+						$loserFound = true;
+						break;
+					}
+				}
+				// if loser was found in a previous round then this pick is impossible so mark them as bad
+				if ($loserFound) {
+					$pick->correct = 'N';
+				} else {
+					// rank of their opponent... just use their pick opponent
+					$rankPickWinner = $ranks[$pick->pool_entry_winner_id];
+					$rankPickLoser = $ranks[$pick->pool_entry_winner_id == $pick->pool_entry_1_id ? $pick->pool_entry_2_id : $pick->pool_entry_1_id];
+					$possible += $this->pickScore($gameWinner['round'], $rankPickWinner < $rankPickLoser);
+					$pick->correct = '?';
+				}
+			}
+		}
+		return [$score, $score + $possible];
+	}
+
+	/**
+	 * how many points is a round game worth?
+	 *
+	 * @param $round int which round
+	 * @param $upset boolean was this an upset?
+	 * @return int total points
+	 */
+	private function pickScore($round, $upset) {
+		switch ($round) {
+			case 1:
+				$points = 1;
+				break;
+			case 2:
+				$points = 2;
+				break;
+			case 3:
+				$points = 4;
+				break;
+			case 4:
+				$points = 8;
+				break;
+			case 5:
+				$points = 16;
+				break;
+			case 6:
+				$points = 32;
+				break;
+			default:
+				// hey, something bad happened you should be aware of
+				$points = -1000;
+				break;
+		}
+		return $points + ($upset ? $points : 0);
+	}
 }

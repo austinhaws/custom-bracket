@@ -40,6 +40,10 @@ var BracketPick = React.createClass({
 		}
 		return (
 			<div className="tournament">
+				<div>
+					Score: {this.props.dataStore.score}<br/>
+					Possible: {this.props.dataStore.possible}
+				</div>
 				<BracketSection pool={this.state.pools.top_left} picks={this.state.picks} teams={this.state.teams.top_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.top_left.id)} onTeamPick={this.onTeamPick}/>
 				<BracketSection pool={this.state.pools.bottom_left} picks={this.state.picks} teams={this.state.teams.bottom_left} games={this.state.games.filter(filterGamesByPoolId, this.state.pools.bottom_left.id)} onTeamPick={this.onTeamPick}/>
 		
@@ -129,7 +133,7 @@ var BracketRound = React.createClass({
 			var result;
 			if (that.roundLocked(game.round)) {
 				result = (
-					<GameLocked key={game.id} team1={team1} team2={team2} correctTeam={that.props.teams.filter(findTeamById, game.pool_entry_1_score > game.pool_entry_2_score ? game.pool_entry_1_id : game.pool_entry_2_id)[0]} selectedTeamId={winnerId} gameId={game.id}/>
+					<GameLocked pick={pick} key={game.id} team1={team1} team2={team2} correctTeam={that.props.teams.filter(findTeamById, game.pool_entry_1_score > game.pool_entry_2_score ? game.pool_entry_1_id : game.pool_entry_2_id)[0]} selectedTeamId={winnerId} gameId={game.id}/>
 				);
 			} else {
 				result = (
@@ -153,7 +157,8 @@ var GameLocked = React.createClass({
 		team1: React.PropTypes.object,
 		team2: React.PropTypes.object,
 		correctTeam: React.PropTypes.object,
-		gameId: React.PropTypes.number.isRequired
+		gameId: React.PropTypes.number.isRequired,
+		pick: React.PropTypes.object
 	},
 	render: function() {
 		var selectedTeam;
@@ -172,16 +177,20 @@ var GameLocked = React.createClass({
 			}
 		}
 		var className;
-		if (!this.props.correctTeam) {
-			className = '';
-		} else if (this.props.correctTeam.id == selectedTeam.id) {
-			className = 'correct';
-		} else {
-			className = 'incorrect';
+		switch (this.props.pick.correct) {
+			case 'Y':
+				className = 'correct';
+				break;
+			case 'N':
+				className = 'incorrect';
+				break;
+			case '?':
+				className = '';
+				break;
 		}
 		return (
 			<div className={className}>
-				{selectedTeam.name} ({selectedTeam.rank})
+				{selectedTeam.name} ({selectedTeam.rank}) {this.props.pick.upset ? '*' : ''}
 			</div>
 		)
 	}

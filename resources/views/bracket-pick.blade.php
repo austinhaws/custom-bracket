@@ -8,7 +8,9 @@
             pools: <? echo $pools; ?>,
             teams: <? echo $teams; ?>,
             picks: <? echo $picks; ?>,
-            lockedRounds: <? echo $lockedRounds; ?>
+            lockedRounds: <? echo $lockedRounds; ?>,
+            score: <? echo $score; ?>,
+            possible: <? echo $possible; ?>
         };
     </script>
 
