@@ -65,7 +65,6 @@ var BracketSection = React.createClass({
 		function filterGamesByRound(game) {
 			return game.round == this;
 		}
-		// TODO: sort games so they come in the right order? or is it naturally that way?
 		var teamList = this.props.teams.map(function(team) {
 			return (
 				<div className="team" key={team.name}>{team.name} ({team.rank})</div>
@@ -93,6 +92,10 @@ var BracketRound = React.createClass({
 		teams : React.PropTypes.array.isRequired,
 		onTeamPick: React.PropTypes.func.isRequired,
 		picks : React.PropTypes.array.isRequired
+	},
+	roundLocked: function(round) {
+		// if the first round has started then can no longer pick games
+		return globals.dataStore.lockedRounds.firstRoundDatePassed;
 	},
 	render: function() {
 		// need to check if a game is picked or not to determine if showing a menu or static text
@@ -123,9 +126,17 @@ var BracketRound = React.createClass({
 				}
 				winnerId = undefined;
 			}
-			return (
-				<GamePicker key={game.id} team1={team1} team2={team2} correctTeam1={correctTeam1} correctTeam2={correctTeam2} selectedTeamId={winnerId} gameId={game.id} onTeamPick={that.props.onTeamPick}/>
-			);
+			var result;
+			if (that.roundLocked(game.round)) {
+				result = (
+					<GameLocked key={game.id} team1={team1} team2={team2} correctTeam={that.props.teams.filter(findTeamById, game.pool_entry_1_score > game.pool_entry_2_score ? game.pool_entry_1_id : game.pool_entry_2_id)[0]} selectedTeamId={winnerId} gameId={game.id}/>
+				);
+			} else {
+				result = (
+					<GamePicker key={game.id} team1={team1} team2={team2} correctTeam1={correctTeam1} correctTeam2={correctTeam2} selectedTeamId={winnerId} gameId={game.id} onTeamPick={that.props.onTeamPick}/>
+				);
+			}
+			return result;
 		});
 		return (
 			<div className="round">
@@ -134,6 +145,45 @@ var BracketRound = React.createClass({
 				</div>
 			</div>
 		);
+	}
+});
+
+var GameLocked = React.createClass({
+	propTypes: {
+		team1: React.PropTypes.object,
+		team2: React.PropTypes.object,
+		correctTeam: React.PropTypes.object,
+		gameId: React.PropTypes.number.isRequired
+	},
+	render: function() {
+		var selectedTeam;
+		if (this.props.selectedTeamId) {
+			if (this.props.team1 && this.props.selectedTeamId == this.props.team1.id) {
+				selectedTeam = this.props.team1;
+			} else if (this.props.team2 && this.props.selectedTeamId == this.props.team2.id) {
+				selectedTeam = this.props.team2;
+			}
+		}
+		if (!selectedTeam) {
+			selectedTeam = {
+				name: 'Not Picked',
+				rank: ' ',
+				id: false
+			}
+		}
+		var className;
+		if (!this.props.correctTeam) {
+			className = '';
+		} else if (this.props.correctTeam.id == selectedTeam.id) {
+			className = 'correct';
+		} else {
+			className = 'incorrect';
+		}
+		return (
+			<div className={className}>
+				{selectedTeam.name} ({selectedTeam.rank})
+			</div>
+		)
 	}
 });
 

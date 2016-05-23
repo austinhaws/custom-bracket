@@ -75,4 +75,19 @@ class BracketDao
 	public static function selectUserBracketGames($where) {
 		return DB::table('user_x_bracket_games')->where($where)->get();
 	}
+
+	public static function selectLockedRounds($bracketId) {
+		return DB::Select('
+			select 
+				case when open_date < now() then 1 else 0 end openDatePassed,
+				case when first_round_date < now() then 1 else 0 end firstRoundDatePassed,
+				case when second_round_date < now() then 1 else 0 end secondRoundDatePassed,
+				case when third_round_date < now() then 1 else 0 end thirdRoundDatePassed,
+				case when fourth_round_date < now() then 1 else 0 end fourthRoundDatePassed,
+				case when fifth_round_date < now() then 1 else 0 end fifthRoundDatePassed,
+				case when sixth_round_date < now() then 1 else 0 end sixthRoundDatePassed
+			from brackets
+			WHERE id = ?
+		', [$bracketId]);
+	}
 }

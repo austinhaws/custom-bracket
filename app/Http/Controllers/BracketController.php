@@ -288,13 +288,15 @@ class BracketController extends Controller
 
 		// what has the user picked so far?
 		$picks = BracketDao::selectUserBracketGames(['user_id' => Auth::user()->id]);
-
+		
+		$lockedRounds = BracketDao::selectLockedRounds($bracket->id)[0];
 		return view('bracket-pick', [
 			'bracket' => json_encode($bracket),
 			'games' => json_encode($games),
 			'pools' => json_encode($pools),
 			'teams' => json_encode($teams),
 			'picks' => json_encode($picks),
+			'lockedRounds' => json_encode($lockedRounds),
 		]);
 	}
 

@@ -3,11 +3,12 @@
 @section('content')
     <script>
         globals.dataStore = {
-              bracket: <? echo $bracket; ?>,
-              games: <? echo $games; ?>,
-              pools: <? echo $pools; ?>,
-              teams: <? echo $teams; ?>,
-              picks: <? echo $picks; ?>
+            bracket: <? echo $bracket; ?>,
+            games: <? echo $games; ?>,
+            pools: <? echo $pools; ?>,
+            teams: <? echo $teams; ?>,
+            picks: <? echo $picks; ?>,
+            lockedRounds: <? echo $lockedRounds; ?>
         };
     </script>
 
@@ -24,6 +25,12 @@
             display: flex;
             justify-content: space-around;
             flex-direction: column;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
         }
     </style>
 
