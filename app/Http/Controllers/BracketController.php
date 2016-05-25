@@ -402,26 +402,33 @@ class BracketController extends Controller
 
 		// load pools for showing real bracket
 		$pools = [
-			['id' => $bracket->top_left_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->top_left_pool_id)],
-			['id' => $bracket->bottom_left_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_left_pool_id)],
-			['id' => $bracket->top_right_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->top_right_pool_id)],
-			['id' => $bracket->bottom_right_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_right_pool_id)],
+			[
+				'id' => $bracket->top_left_pool_id,
+				'teams' => PoolDao::selectTeamsListForPool($bracket->top_left_pool_id),
+				'pool' => PoolDao::selectPools(['id' => $bracket->top_left_pool_id])[0]
+			],
+			[
+				'id' => $bracket->bottom_left_pool_id,
+				'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_left_pool_id),
+				'pool' => PoolDao::selectPools(['id' => $bracket->bottom_left_pool_id])[0]
+			],
+			[
+				'id' => $bracket->top_right_pool_id,
+				'teams' => PoolDao::selectTeamsListForPool($bracket->top_right_pool_id),
+				'pool' => PoolDao::selectPools(['id' => $bracket->top_right_pool_id])[0]
+			],
+			[
+				'id' => $bracket->bottom_right_pool_id,
+				'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_right_pool_id),
+				'pool' => PoolDao::selectPools(['id' => $bracket->bottom_right_pool_id])[0]
+			],
 		];
 		
-		// load teams for showing real bracket
-		$teams = [
-			'top_left' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->top_left_pool_id)),
-			'bottom_left' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->bottom_left_pool_id)),
-			'top_right' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->top_right_pool_id)),
-			'bottom_right' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->bottom_right_pool_id)),
-		];
-
 		return view('bracket-scores', [
 			'data' => json_encode([
 				'bracket' => $bracket,
 				'games' => $games,
 				'pools' => $pools,
-				'teams' => $teams,
 				'scores' => $scores,
 				'possibles' => $possibles,
 				'users' => $users,
@@ -488,14 +495,18 @@ class BracketController extends Controller
 
 		// score each pick
 		foreach ($picks as $pick) {
+			if (!isset($scores[$pick->user_id])) {
+				$scores[$pick->user_id] = 0;
+				$possibles[$pick->user_id] = 0;
+			}
 			$gameWinner = $gameWinners[$pick->bracket_game_id];
 			$pick->upset = false;
 
-			// check if game has a winner yet (maybe this round isn't played yet
+			// check if game has a winner yet (maybe this round isn't played yet)
 			if ($gameWinner['winnerId']) {
 				// there is a winner! did they pick right?
 				if ($gameWinner['winnerId'] == $pick->pool_entry_winner_id) {
-					$scores[$pick->user_id] = (isset($scores[$pick->user_id]) ? $scores[$pick->user_id] : 0) + $this->pickScore($gameWinner['round'], $gameWinner['upset']);
+					$scores[$pick->user_id] += $this->pickScore($gameWinner['round'], $gameWinner['upset']);
 					$pick->upset = $gameWinner['upset'];
 					$pick->correct = 'Y';
 				} else {
@@ -518,7 +529,7 @@ class BracketController extends Controller
 					// rank of their opponent... just use their pick opponent
 					$rankPickWinner = $ranks[$pick->pool_entry_winner_id];
 					$rankPickLoser = $ranks[$pick->pool_entry_winner_id == $pick->pool_entry_1_id ? $pick->pool_entry_2_id : $pick->pool_entry_1_id];
-					$possibles[$pick->user_id] = (isset($possibles[$pick->user_id]) ? $possibles[$pick->user_id] : 0) + $this->pickScore($gameWinner['round'], $rankPickWinner < $rankPickLoser);
+					$possibles[$pick->user_id] += $this->pickScore($gameWinner['round'], $rankPickWinner < $rankPickLoser);
 					$pick->correct = '?';
 				}
 			}
