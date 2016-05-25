@@ -76,6 +76,16 @@ class BracketDao
 		return DB::table('user_x_bracket_games')->where($where)->get();
 	}
 
+	public static function selectUserBracketGamesByBracketId($bracketId) {
+		return DB::Select('
+			select *
+			from user_x_bracket_games 
+			where bracket_game_id IN (
+				SELECT id FROM bracket_games WHERE bracket_id = ?
+			)
+		', [$bracketId]);
+	}
+
 	public static function selectLockedRounds($bracketId) {
 		return DB::Select('
 			select 

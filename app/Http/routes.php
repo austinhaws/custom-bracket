@@ -57,6 +57,9 @@ Route::get('/bracket/{id}', 'BracketController@bracketPicks');
 // make a bracket pick
 Route::post('/bracket/pick', 'BracketController@bracketPick');
 
+// view scores of everyone in a bracket
+Route::get('/bracket/scores/{id}', 'BracketController@bracketScores');
+
 // Admin
 Route::get('/admin', 'AdminController@index');
 Route::get('/admin/pool/add', 'PoolController@poolAdd');

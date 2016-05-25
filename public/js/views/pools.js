@@ -94,7 +94,7 @@ var Bracket = React.createClass({
 		return (
 			<div className="bracket">
 			<h2 className="bracketName">
-				<a href={'bracket/' + this.props.bracket.id}>{this.props.bracket.name}</a> <span className="bracketDates"> {poolDateString(this.props.bracket.open_date, this.props.bracket.first_round_date)}</span>
+				<a href={'bracket/' + this.props.bracket.id}>{this.props.bracket.name}</a> <span className="bracketDates"> {poolDateString(this.props.bracket.open_date, this.props.bracket.first_round_date)}</span> <a href={'bracket/scores/' + this.props.bracket.id}>View Scores</a>
 			</h2>
 		</div>
 		);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Dao\BracketDao;
 use App\Dao\PoolDao;
+use App\Dao\UserDao;
 use App\Http\Requests;
 use Auth;
 use App\Enums\Roles;
@@ -287,17 +288,18 @@ class BracketController extends Controller
 		];
 
 		// what has the user picked so far?
-		$picks = BracketDao::selectUserBracketGames(['user_id' => Auth::user()->id]);
+		$userId = Auth::user()->id;
+		$picks = BracketDao::selectUserBracketGames(['user_id' => $userId]);
 
 		$lockedRounds = BracketDao::selectLockedRounds($bracket->id)[0];
-		list($score, $possible) = $this->scoreBracketPicks($games, $picks);
+		list($scores, $possibles) = $this->scoreBracketPicks($games, $picks);
 		return view('bracket-pick', [
 			'bracket' => json_encode($bracket),
 			'games' => json_encode($games),
 			'pools' => json_encode($pools),
 			'teams' => json_encode($teams),
-			'score' => $score,
-			'possible' => $possible,
+			'score' => isset($scores[$userId]) ? $scores[$userId] : 0,
+			'possible' => isset($scores[$userId]) ? $scores[$userId] + $possibles[$userId] : 0,
 			'picks' => json_encode($picks),
 			'lockedRounds' => json_encode($lockedRounds),
 		]);
@@ -377,15 +379,70 @@ class BracketController extends Controller
 	}
 
 	/**
+	 * show scores of players in a bracket
+	 *
+	 * @param $bracketId int the bracket to show
+	 * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+	 */
+	public function bracketScores($bracketId) {
+		// get the bracket
+		$bracket = BracketDao::selectBrackets(['id' => $bracketId])[0];
+
+		// load games for the round for the bracket
+		$games = BracketDao::selectBracketGames($bracketId, false);
+
+		// get picks for all the users of this bracket
+		$userPicks = BracketDao::selectUserBracketGamesByBracketId($bracketId);
+
+		// score all the picks
+		list($scores, $possibles) = $this->scoreBracketPicks($games, $userPicks);
+
+		// for security, probably should only show users that have brackets...
+		$users = UserDao::selectUsers();
+
+		// load pools for showing real bracket
+		$pools = [
+			['id' => $bracket->top_left_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->top_left_pool_id)],
+			['id' => $bracket->bottom_left_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_left_pool_id)],
+			['id' => $bracket->top_right_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->top_right_pool_id)],
+			['id' => $bracket->bottom_right_pool_id, 'games' => [], 'teams' => PoolDao::selectTeamsListForPool($bracket->bottom_right_pool_id)],
+		];
+		
+		// load teams for showing real bracket
+		$teams = [
+			'top_left' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->top_left_pool_id)),
+			'bottom_left' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->bottom_left_pool_id)),
+			'top_right' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->top_right_pool_id)),
+			'bottom_right' => $this->sortTeamsByBracketRank(PoolDao::selectTeamsListForPool($bracket->bottom_right_pool_id)),
+		];
+
+		return view('bracket-scores', [
+			'data' => json_encode([
+				'bracket' => $bracket,
+				'games' => $games,
+				'pools' => $pools,
+				'teams' => $teams,
+				'scores' => $scores,
+				'possibles' => $possibles,
+				'users' => $users,
+			])
+		]);
+	}
+
+	/**
 	 * how many points does this bracket have?
 	 *
 	 * @param $games array the played games
-	 * @param $picks array the user's picks
+	 * @param $picks array the users' picks
 	 * @return int their current score
 	 */
 	private function scoreBracketPicks($games, &$picks) {
 		// map games to their data for quick lookup
 		$gameWinners = [];
+
+		// user id => score
+		$scores = [];
+		$possibles = [];
 
 		// which teams lost in which rounds to know if future picks of that same team are bad
 		$loserIdsByRound = [
@@ -402,8 +459,10 @@ class BracketController extends Controller
 
 		// load game information about winners
 		foreach ($games as $game) {
+			// remember ranks of teams (winning teams overwrite themselves several times /shrug)
 			$ranks[$game->pool_entry_1_id] = $game->pool_entry_1_rank;
 			$ranks[$game->pool_entry_2_id] = $game->pool_entry_2_rank;
+
 			if ($game->pool_entry_1_score > $game->pool_entry_2_score) {
 				$winnerId = $game->pool_entry_1_id;
 				$loserId = $game->pool_entry_2_id;
@@ -428,8 +487,6 @@ class BracketController extends Controller
 		}
 
 		// score each pick
-		$score = 0;
-		$possible = 0;
 		foreach ($picks as $pick) {
 			$gameWinner = $gameWinners[$pick->bracket_game_id];
 			$pick->upset = false;
@@ -438,7 +495,7 @@ class BracketController extends Controller
 			if ($gameWinner['winnerId']) {
 				// there is a winner! did they pick right?
 				if ($gameWinner['winnerId'] == $pick->pool_entry_winner_id) {
-					$score += $this->pickScore($gameWinner['round'], $gameWinner['upset']);
+					$scores[$pick->user_id] = (isset($scores[$pick->user_id]) ? $scores[$pick->user_id] : 0) + $this->pickScore($gameWinner['round'], $gameWinner['upset']);
 					$pick->upset = $gameWinner['upset'];
 					$pick->correct = 'Y';
 				} else {
@@ -461,12 +518,12 @@ class BracketController extends Controller
 					// rank of their opponent... just use their pick opponent
 					$rankPickWinner = $ranks[$pick->pool_entry_winner_id];
 					$rankPickLoser = $ranks[$pick->pool_entry_winner_id == $pick->pool_entry_1_id ? $pick->pool_entry_2_id : $pick->pool_entry_1_id];
-					$possible += $this->pickScore($gameWinner['round'], $rankPickWinner < $rankPickLoser);
+					$possibles[$pick->user_id] = (isset($possibles[$pick->user_id]) ? $possibles[$pick->user_id] : 0) + $this->pickScore($gameWinner['round'], $rankPickWinner < $rankPickLoser);
 					$pick->correct = '?';
 				}
 			}
 		}
-		return [$score, $score + $possible];
+		return [$scores, $possibles];
 	}
 
 	/**
