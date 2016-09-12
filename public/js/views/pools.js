@@ -4,10 +4,13 @@ var PoolsBox = React.createClass({
 	},
 	componentDidMount: function() {
 		$.ajax({
-			url: this.props.url,
+			url: "pool/list",
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
+				data.forEach(function (pool) {
+					pool.status = poolDateStatus(pool.open_date, pool.closing_date);
+				});
 				this.setState({data: data});
 			}.bind(this),
 			error: function(xhr, status, err) {
@@ -18,7 +21,20 @@ var PoolsBox = React.createClass({
 	render: function() {
 		return (
 			<div class="poolsBox">
-				<PoolsList data={this.state.data}/>
+				<PoolSection title="Upcoming" titleClass="upcoming" list={this.state.data.filter(function (pool) {return pool.status == -1;})}/>
+				<PoolSection title="Voting!" titleClass="voting" list={this.state.data.filter(function (pool) {return pool.status == 0;})}/>
+				<PoolSection title="Complete" titleClass="complete" list={this.state.data.filter(function (pool) {return pool.status == 1;})}/>
+			</div>
+		);
+	}
+});
+
+var PoolSection = React.createClass({
+	render: function () {
+		return (
+			<div className={'poolSection ' + this.props.titleClass}>
+				<div className="poolSectionTitle h4">{this.props.title}</div>
+				<PoolsList data={this.props.list}/>
 			</div>
 		);
 	}
@@ -43,16 +59,16 @@ var Pool = React.createClass({
 	render: function() {
 		return (
 			<div className="pool">
-				<h2 className="poolName">
-					<a href={'pool/' + this.props.pool.id}>{this.props.pool.name}</a> <span className="poolDates"> {poolDateString(this.props.pool.open_date, this.props.pool.closing_date)}</span>
-				</h2>
+				<div className="poolName">
+					<a href={'pool/' + this.props.pool.id} className="h4">{this.props.pool.name} <span className="poolDates"> {poolDateStringFromPool(this.props.pool)}</span></a>
+				</div>
 			</div>
 		);
 	}
 });
 
 ReactDOM.render(
-	<PoolsBox url="pool/list"/>,
+	<PoolsBox/>,
 	document.getElementById('poolsBox')
 );
 

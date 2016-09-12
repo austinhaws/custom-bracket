@@ -1,3 +1,63 @@
+body {
+	background-color: black;
+}
+
+.blurb {
+	color: darkgray;
+	font-size: 14px;
+}
+
+.poolDates {
+	font-size: 14px;
+}
+.poolName a:hover {
+	color: #5cd25c;
+	text-decoration: none;
+}
+.poolSectionTitle {
+	width: 100px;
+	border-bottom: 1px solid #c8c8c8;
+	margin: 0 auto 10px;
+	padding-bottom: 5px;
+}
+
+#poolsBox [data-reactroot] {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+.poolSection {
+	overflow: auto;
+	flex-grow: 1;
+	text-align: center;
+}
+.poolSection.voting .poolName {
+	color: #4cad4c;
+}
+
+.poolSection.upcoming .poolName {
+}
+
+.poolSection.complete .poolName {
+	color: #3e0000;
+}
+
+.navbar-brand {
+	animation: pulse 10s infinite;
+}
+
+@keyframes pulse {
+	0% {
+		color: #777;
+	}
+	50% {
+		color: #763f02;
+	}
+	100% {
+		color: #777;
+	}
+}
+
 .button {
 	display: inline-block;
 	position: relative;
