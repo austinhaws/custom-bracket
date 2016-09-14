@@ -70,7 +70,11 @@ class PoolDao
 	}
 	
 	public static function selectPools($where) {
-		return DB::table('pools')->where($where)->get();
+		$query = DB::table('pools');
+		if ($where) {
+			$query->where($where);
+		}
+		return $query->get();
 	}
 
 	public static function savePoolEntry(&$poolEntry) {

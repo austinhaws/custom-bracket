@@ -75,7 +75,9 @@ ReactDOM.render(
 
 var BracketsBox = React.createClass({
 	getInitialState: function() {
-		return {brackets: []};
+		return {bracket: {
+			pools: [{name: ''}, {name: ''}, {name: ''}, {name: ''}]
+		}};
 	},
 	componentDidMount: function() {
 		$.ajax({
@@ -83,7 +85,8 @@ var BracketsBox = React.createClass({
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
-				this.setState({brackets: data});
+console.log(data);
+				this.setState({bracket: data.length ? data[0] : false});
 		}.bind(this),
 		error: function(xhr, status, err) {
 			console.error(this.props.url, status, err.toString());
@@ -92,14 +95,67 @@ var BracketsBox = React.createClass({
 
 	},
 	render: function() {
-		var bracketNodes = this.state.brackets.map(function(bracket) {
+		var poolTL = this.state.bracket.pools.find(p => p.id == this.state.bracket.top_left_pool_id);
+		var poolBL = this.state.bracket.pools.find(p => p.id == this.state.bracket.bottom_left_pool_id);
+		var poolTR = this.state.bracket.pools.find(p => p.id == this.state.bracket.top_right_pool_id);
+		var poolBR = this.state.bracket.pools.find(p => p.id == this.state.bracket.bottom_right_pool_id);
+
+		var playDates = [
+			{
+				name: 'First Round (Day 1)',
+				date: this.state.bracket.first_round_date_day_1
+			},
+			{
+				name: 'First Round (Day 2)',
+				date: this.state.bracket.first_round_date_day_2
+			},
+			{
+				name: 'Second Round',
+				date: this.state.bracket.second_round_date
+			},
+			{
+				name: 'Sweet Sixteen',
+				date: this.state.bracket.third_round_date
+			},
+			{
+				name: 'Elite Eight',
+				date: this.state.bracket.fourth_round_date
+			},
+			{
+				name: 'Final Four',
+				date: this.state.bracket.fifth_round_date
+			},
+			{
+				name: 'Pandimensional Champion',
+				date: this.state.bracket.sixth_round_date
+			}
+		].map(function (date, idx) {
 			return (
-				<Bracket key={bracket.id} bracket={bracket}/>
+				<div className="playRow" key={idx}>
+					<div className="dateLabel">{date.name}</div><div className="date">{date.date}</div>
+				</div>
 			);
 		});
 		return (
-			<div id="brackets-list">
-				{bracketNodes}
+			<div className="bracket">
+				<div className="conferences">
+					<div className="column">
+						<div className="conference">{poolTL ? poolTL.name : ''}</div>
+						<div className="vs">vs</div>
+						<div className="conference">{poolBL ? poolBL.name : ''}</div>
+					</div>
+					<div className="column">
+						<div className="vs">vs</div>
+					</div>
+					<div className="column">
+						<div className="conference">{poolTR ? poolTR.name : ''}</div>
+						<div className="vs">vs</div>
+						<div className="conference">{poolBR ? poolBR.name : ''}</div>
+					</div>
+				</div>
+				<div className="playDates">
+					{playDates}
+				</div>
 			</div>
 		);
 	}

@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'BracketDoubleFirstRound' => $baseDir . '/database/migrations/2016_09_14_220139_bracket_double_first_round.php',
     'BracketGame' => $baseDir . '/database/migrations/2016_05_08_180626_bracket_game.php',
     'BracketRolls' => $baseDir . '/database/migrations/2016_05_12_113759_bracket_rolls.php',
     'Brackets' => $baseDir . '/database/migrations/2016_05_05_020246_brackets.php',

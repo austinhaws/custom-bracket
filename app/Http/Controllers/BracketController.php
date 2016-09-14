@@ -32,6 +32,8 @@ class BracketController extends Controller
 	public function ajaxList()
 	{
 		$brackets = BracketDao::selectBrackets(false);
+		$bracket = $brackets[0];
+		$bracket->pools = PoolDao::selectPools(false);
 
 		return json_encode($brackets);
 	}
