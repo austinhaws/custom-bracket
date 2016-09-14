@@ -50,62 +50,21 @@ class PoolController extends Controller
 		usort($teams, function ($a, $b) {
 			$order = $this->compareNumeric($a->votes, $b->votes) * -1;
 			if (!$order) {
-				// keep order same for top rankers but sort later by sort order
 				$order = strcmp($a->name, $b->name);
 			}
 			return $order;
 		});
-
-		$cloudCount = 8;
-
-		if (count($teams) > $cloudCount) {
-			// chunk out high and low teams and then do random sort
-			$cloudTeams = array_slice($teams, 0, $cloudCount);
-			$uncloudTeams = array_slice($teams, $cloudCount);
-		} else {
-			$cloudTeams = $teams;
-			$uncloudTeams = [];
-		}
-
-		// resort lists
-		usort($cloudTeams, function ($a, $b) {
-			return $this->compareNumeric($a->sortOrder, $b->sortOrder);
-		});
-		usort($uncloudTeams, function ($a, $b) {
-			return $this->compareNumeric($a->sortOrder, $b->sortOrder);
-		});
-
-		// how many total picks does the person get
-		$picks = floor((count($cloudTeams) + count($uncloudTeams)) / 2);
-
-		// how many has the user picked?
-		$pickeds = 0;
-		foreach ($cloudTeams as $team) {
-			if ($team->picked) {
-				$pickeds++;
-			}
-		}
-		foreach ($uncloudTeams as $team) {
-			if ($team->picked) {
-				$pickeds++;
-			}
-		}
-
+		$pool = PoolDao::selectPools(['id' => $id])[0];
 		return json_encode([
-			'cloudTeams' => $cloudTeams,
-			'uncloudTeams' => $uncloudTeams,
-			'numberPicks' => $picks - $pickeds,
+			'teams' => $teams,
+			'pool' => $pool,
 		]);
 	}
 
 	public function pickTeam($teamId)
 	{
-		$team = PoolDao::selectTeamById($teamId);
-
-		$picksLeft = $this->picksLeftForPoolId($team->pool_id);
-
-		// if there are enough picks left, pick this team
-		if ($picksLeft) {
+		// if nothing deleted, add the pick
+		if (!PoolDao::deleteUserPollTeamEntry(Auth::user()->id, $teamId)) {
 			PoolDao::insertUserPoolTeamEntry(Auth::user()->id, $teamId);
 		}
 	}

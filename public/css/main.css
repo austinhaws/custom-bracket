@@ -1,5 +1,5 @@
 body {
-	background-color: black;
+	background-color: #333;
 }
 
 .blurb {
@@ -9,6 +9,7 @@ body {
 
 .poolDates {
 	font-size: 14px;
+	color: #999;
 }
 .poolName a:hover {
 	color: #5cd25c;
@@ -32,7 +33,7 @@ body {
 	text-align: center;
 }
 .poolSection.voting .poolName {
-	color: #4cad4c;
+	color: #058605;
 }
 
 .poolSection.upcoming .poolName {

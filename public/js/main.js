@@ -76,7 +76,7 @@ function poolDateStringFromPool(pool) {
 			if (!pool.open_date || pool.open_date == '0000-00-00') {
 				result = '';
 			} else {
-				result = momentWeeksDaysDifference(moment(openDate), moment());
+				result = momentWeeksDaysDifference(moment(), moment(pool.open_date));
 			}
 			break;
 
@@ -100,8 +100,8 @@ function poolDateStringFromPool(pool) {
 
 
 function poolDateString(teamOpenDate, teamCloseDate) {
-	var openDate = teamOpenDate == '0000-00-00' ? false : moment(teamOpenDate);
-	var closeDate = teamCloseDate == '0000-00-00' ? false : moment(teamCloseDate);
+	var openDate = (!teamOpenDate || teamOpenDate) == '0000-00-00' ? false : moment(teamOpenDate);
+	var closeDate = (!teamOpenDate || teamOpenDate) == '0000-00-00' ? false : moment(teamCloseDate);
 	var today = moment();
 	var dateString;
 	var dateFormat = 'MMM Do, Y';

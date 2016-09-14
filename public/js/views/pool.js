@@ -3,14 +3,13 @@
 var PoolBox = React.createClass({
 	getInitialState: function() {
 		return {
-			cloudTeams: [],
-			uncloudTeams: [],
-			numberPicks: 0
+			teams: [],
+			pool: {id: this.props.id}
 		};
 	},
 	componentDidMount: function() {
 		$.ajax({
-			url: this.props.url + this.props.id,
+			url: 'pool/detail/' + this.props.id,
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
@@ -22,71 +21,68 @@ var PoolBox = React.createClass({
 		});
 	},
 	usePickCallback: function(teamId) {
-		var result;
-		if (this.state.numberPicks) {
-			this.setState({numberPicks: this.state.numberPicks - 1});
-			result = true;
-			$.ajax({
-				url: 'pool/pick/' + teamId,
-				dataType: 'json',
-				cache: false
-			});
-		} else {
-			alert('You do not have another pick. You will gain more picks as more teams are added to the pool.');
-			result = false;
-		}
-		return result;
+		$.ajax({
+			url: 'pool/pick/' + teamId,
+			dataType: 'json',
+			cache: false,
+		});
 	},
 	enterTeamCallback: function(teamName) {
-		var result;
-		if (this.state.numberPicks) {
-			this.setState({numberPicks: this.state.numberPicks - 1});
-			result = true;
-			$.ajax({
-				url: 'pool/enterTeam',
-				dataType: 'json',
-				data: csrf({poolId: this.props.poolId, name: teamName}),
-				cache: false,
-				method: 'post',
-				success: function(data) {
-					var unpickedTeams = this.state.uncloudTeams;
-					data.picked = 1;
-					unpickedTeams.push(data);
-					this.setState({uncloudTeams: unpickedTeams});
-				}.bind(this),
-				error: function(xhr, status, err) {
-					console.error(this.props.url, status, err.toString());
-				}.bind(this)
-			});
-		} else {
-			alert('Entering a team name uses a pick. You do not have another pick. You will gain more picks as more teams are added to the pool.');
-			result = false;
-		}
-		return result;
+		$.ajax({
+			url: 'pool/enterTeam',
+			dataType: 'json',
+			data: csrf({poolId: this.props.poolId, name: teamName}),
+			cache: false,
+			method: 'post',
+			success: function(data) {
+				var teams = this.state.teams;
+				data.picked = 1;
+				teams.push(data);
+				this.setState({teams: teams});
+			}.bind(this),
+			error: function(xhr, status, err) {
+				console.error(this.props.url, status, err.toString());
+			}.bind(this)
+		});
 	},
 	render: function() {
-		return (
-			<div class="poolsBox">
-				<PickCounter numberPicks={this.state.numberPicks}/>
-				<TeamCloud data={this.state.cloudTeams} usePickCallback={this.usePickCallback}/>
-				<TeamList data={this.state.uncloudTeams} usePickCallback={this.usePickCallback}/>
-				<TeamEntry enterTeamCallback={this.enterTeamCallback}/>
-			</div>
-		);
-	}
-});
+		var flags = {
+			teamsDivider: false,
+			teamEntry: false,
+			voteable: false
+		};
 
-var TeamCloud = React.createClass({
-	render: function() {
-		var that = this;
-		var teamNodes = this.props.data.map(function(team) {
-			return (
-				<Team name={team.name} key={team.id} id={team.id} initialPicked={team.picked} usePickCallback={that.props.usePickCallback}/>
-			);
-		});
+		switch (poolDateStatus(this.state.pool.open_date, this.state.pool.closing_date)) {
+			case -1:
+				// upcoming, show list of teams and team entry
+				flags.teamEntry = true;
+				break;
+			case 0:
+				// voting, show list of teams with divider line and team entry and voteable
+				flags.teamEntry = true;
+				flags.teamsDivider = true;
+				flags.voteable = true;
+				break;
+			case 1:
+				// voting closed, show list of teams wtihdivider, no team entry, not voteable
+				flags.teamsDivider = true;
+				break;
+		}
+
+		var teamEntry;
+		if (flags.teamEntry) {
+			teamEntry = <TeamEntry enterTeamCallback={this.enterTeamCallback}/>;
+		}
 		return (
-			<div className="teamsCloud">
-			{teamNodes}
+			<div className="poolsBox col-md-12 col-md-offset-1">
+				<div className="panel panel-default">
+					<div className="panel-heading h3">{this.state.pool.name} <span className="blurb">16 highest voted teams play in the conference</span></div>
+					<div className="panel-body">
+						<div className="poolDate">{poolDateString(this.state.pool.open_date, this.state.pool.closing_date)}</div>
+						<TeamList data={this.state.teams} usePickCallback={flags.voteable ? this.usePickCallback : false} divider={flags.teamsDivider}/>
+						{teamEntry}
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -101,7 +97,7 @@ var TeamList = React.createClass({
 			);
 		});
 		return (
-			<div className="teamsList">
+			<div className={'teamsList ' + (this.props.divider ? 'showDivider' : '')}>
 			{teamNodes}
 			</div>
 		);
@@ -115,14 +111,15 @@ var Team = React.createClass({
 		}
 	},
 	handleClick: function() {
-		if (!this.state.picked && this.props.usePickCallback(this.props.id)) {
-			this.setState({picked: true});
-		}
+		this.props.usePickCallback(this.props.id);
+		this.setState({picked: !this.state.picked});
 	},
 	render: function() {
-		var pickedClass = 'team button ' + (this.state.picked ? 'picked' : '');
 		return (
-			<span className={pickedClass} onClick={this.handleClick}>{this.props.name}</span>
+			<div className="team">
+				{this.props.usePickCallback ? <div className={'checkbox ' + (this.state.picked ? 'picked' : '')} onClick={this.handleClick}></div> : ''}
+				<div className="teamName">{this.props.name}</div>
+			</div>
 		);
 	}
 
@@ -137,30 +134,27 @@ var TeamEntry = React.createClass({
 	handleClick: function(event) {
 		event.stopPropagation();
 		event.preventDefault();
-		this.props.enterTeamCallback(this.state.teamName);
+		if (this.state.teamName) {
+			this.props.enterTeamCallback(this.state.teamName);
+			this.setState({teamName: ''});
+		} else {
+			alert('Please a team name and try again');
+		}
 	},
 	nameChanged: function(event) {
 		this.setState({teamName: event.target.value})
 	},
 	render: function() {
 		return (
-			<div id="teamEntryContainer">
-				<span>Who is missing?</span> <input type="text" id="team-entry" onChange={this.nameChanged} value={this.state.teamName}/> <button id="team-entry-submit" onClick={this.handleClick}>Submit</button>
+			<div id="teamEntryContainer" className="form-inline">
+				<input type="text" id="team-entry" className="form-control" placeholder="new team name" onChange={this.nameChanged} value={this.state.teamName}/>
+				<button type="button" className="btn btn-primary" id="team-entry-submit" onClick={this.handleClick}>Submit New Team</button>
 			</div>
 		);
 	}
 });
 
-var PickCounter = React.createClass({
-	render: function() {
-		return (
-			<div id="numberPicks">You have {this.props.numberPicks} picks remaining</div>
-		)
-	}
-});
-
-
 ReactDOM.render(
-	<PoolBox url="pool/detail/" id={globals.poolId} initialNumberPicks="0" poolId={globals.poolId}/>,
+	<PoolBox id={globals.poolId} poolId={globals.poolId}/>,
 	document.getElementById('poolBox')
 );

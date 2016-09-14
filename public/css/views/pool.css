@@ -50,18 +50,66 @@
 }
 
 .teamsList {
-	margin: 50px auto 0;
-	display: flex;
-	width: 500px;
-	flex: 1;
-	flex-wrap: wrap;
-	justify-content: space-around;
+	margin-bottom: 15px;
 }
 
-.teamsList > .team {
-	margin: 15px;
+.teamsList .team {
+	width: 150px;
+	margin: 0 auto;
+}
+.teamList .team:first-child {
+	margin-top: 5px;
 }
 
 .button.picked {
 	background: #945a50;
+}
+
+.checkbox {
+	height: 16px;
+	width: 16px;
+	background-image: url('../../img/checkbox.png');
+	background-size: 16px;
+	cursor: pointer;
+	border-radius: 2px;
+	background-position: 16px 16px;
+}
+.checkbox.picked {
+	background-position: 16px 0;
+}
+.checkbox:hover {
+	background-position: 16px -16px;
+}
+.checkbox.picked:hover {
+	background-position: 16px 0;
+}
+.team {
+	display: flex;
+	align-items: center;
+}
+.team div:nth-child(2) {
+	margin-left: 10px;
+}
+
+.poolDate {
+	text-align: center;
+	font-size: 16px;
+	margin-bottom: 15px;
+	color: #520202;
+}
+
+#teamEntryContainer {
+	text-align: center;
+}
+#team-entry {
+	width: 200px;
+}
+#teamEntryContainer button {
+	margin-left: 5px;
+}
+
+.teamsList.showDivider .team:nth-child(16) {
+	border-bottom: 1px solid black;
+	padding-bottom: 5px;
+	margin-bottom: 9px;
 }

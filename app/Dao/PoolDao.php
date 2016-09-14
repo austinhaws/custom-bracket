@@ -49,6 +49,10 @@ class PoolDao
 		return DB::Insert('INSERT INTO user_x_pool_team_entries (user_id, pool_entry_id) VALUES (?, ?)', [$userId, $teamId]);
 	}
 
+	public static function deleteUserPollTeamEntry($userId, $teamId) {
+		return DB::table('user_x_pool_team_entries')->where(['user_id' => $userId, 'pool_entry_id' => $teamId])->delete();
+	}
+
 	public static function insertPoolTeamEntry($poolId, $teamName) {
 		return DB::table('pool_entries')->insertGetId(['pool_id' => $poolId, 'name' => $teamName]);
 	}
