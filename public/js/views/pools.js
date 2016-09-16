@@ -85,7 +85,6 @@ var BracketsBox = React.createClass({
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
-console.log(data);
 				this.setState({bracket: data.length ? data[0] : false});
 		}.bind(this),
 		error: function(xhr, status, err) {
@@ -100,7 +99,13 @@ console.log(data);
 		var poolTR = this.state.bracket.pools.find(p => p.id == this.state.bracket.top_right_pool_id);
 		var poolBR = this.state.bracket.pools.find(p => p.id == this.state.bracket.bottom_right_pool_id);
 
+		// find first date after today and the previous was before today
+		var today = moment().startOf('day');
 		var playDates = [
+			{
+				name: 'Open for picking',
+				date: this.state.bracket.open_date
+			},
 			{
 				name: 'First Round (Day 1)',
 				date: this.state.bracket.first_round_date_day_1
@@ -129,9 +134,10 @@ console.log(data);
 				name: 'Pandimensional Champion',
 				date: this.state.bracket.sixth_round_date
 			}
-		].map(function (date, idx) {
+		].map(function (date, idx, arr) {
+			var current = date.date && moment(date.date).diff(moment().startOf('day')) >= 0 && (idx == 0 || moment(arr[idx - 1].date).diff(moment().startOf('day')) < 0);
 			return (
-				<div className="playRow" key={idx}>
+				<div className={'playRow ' + (current ? 'current' : '')} key={idx}>
 					<div className="dateLabel">{date.name}</div><div className="date">{date.date}</div>
 				</div>
 			);

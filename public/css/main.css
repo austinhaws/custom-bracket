@@ -197,7 +197,7 @@ body {
 }
 #bracketsBox .conferences, #bracketsBox .playDates {
 	float: left;
-	height: 200px;
+	height: 204px;
 }
 #bracketsBox .playDates {
 	display: flex;
@@ -230,7 +230,7 @@ body {
 	float: left;
 }
 .playRow {
-	margin-top: 9px;
+	margin-top: 5px;
 }
 .playRow:nth-child(1) {
 	margin-top: 0;
@@ -240,4 +240,8 @@ body {
 }
 .playRow div:nth-child(2) {
 	margin-left: 10px;
+}
+.playRow.current {
+	font-weight: bold;
+	font-size: 15px;
 }

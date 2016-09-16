@@ -35,7 +35,7 @@ function csrf(data) {
 function poolDateStatus(teamOpenDate, teamCloseDate) {
 	var openDate = teamOpenDate == '0000-00-00' ? false : moment(teamOpenDate);
 	var closeDate = teamCloseDate == '0000-00-00' ? false : moment(teamCloseDate);
-	var today = moment();
+	var today = moment().startOf('day');
 
 	return (!openDate || openDate.isAfter(today)) ? -1 : (today.isBefore(closeDate) ? 0 : 1);
 }
@@ -76,7 +76,7 @@ function poolDateStringFromPool(pool) {
 			if (!pool.open_date || pool.open_date == '0000-00-00') {
 				result = '';
 			} else {
-				result = momentWeeksDaysDifference(moment(), moment(pool.open_date));
+				result = pool.open_date;//momentWeeksDaysDifference(moment().startOf('day'), moment(pool.open_date));
 			}
 			break;
 
@@ -85,7 +85,7 @@ function poolDateStringFromPool(pool) {
 			if (!pool.closing_date || pool.closing_date == '0000-00-00') {
 				result = '';
 			} else {
-				result = momentWeeksDaysDifference(moment(), moment(pool.closing_date)) + ' left';
+				result = momentWeeksDaysDifference(moment().startOf('day'), moment(pool.closing_date)) + ' left';
 			}
 			break;
 
@@ -102,7 +102,7 @@ function poolDateStringFromPool(pool) {
 function poolDateString(teamOpenDate, teamCloseDate) {
 	var openDate = (!teamOpenDate || teamOpenDate) == '0000-00-00' ? false : moment(teamOpenDate);
 	var closeDate = (!teamOpenDate || teamOpenDate) == '0000-00-00' ? false : moment(teamCloseDate);
-	var today = moment();
+	var today = moment().startOf('day');
 	var dateString;
 	var dateFormat = 'MMM Do, Y';
 
