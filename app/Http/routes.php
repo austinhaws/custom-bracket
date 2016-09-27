@@ -64,6 +64,7 @@ Route::get('/bracket/scores/{id}', 'BracketController@bracketScores');
 Route::get('/admin', 'AdminController@index');
 Route::get('/admin/pool/add', 'PoolController@poolAdd');
 Route::post('/admin/pool/save', 'PoolController@poolSave');
+Route::post('/admin/pool/savePools', 'PoolController@savePools');
 Route::get('/admin/pool/{id}', 'PoolController@poolEdit');
 
 Route::get('/admin/bracket/add', 'BracketController@bracketAdd');

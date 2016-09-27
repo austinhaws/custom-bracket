@@ -57,7 +57,15 @@ class PoolDao
 		return DB::table('pool_entries')->insertGetId(['pool_id' => $poolId, 'name' => $teamName]);
 	}
 
+	private static function clearEmptyDate(&$obj, $dateField) {
+		if (!$obj[$dateField]) {
+			$obj[$dateField] = null;
+		}
+	}
+
 	public static function savePool(&$pool) {
+		PoolDao::clearEmptyDate($pool, 'open_date');
+		PoolDao::clearEmptyDate($pool, 'closing_date');
 		if ($pool['id']) {
 			DB::table('pools')->where('id', $pool['id'])->update($pool);
 		} else {

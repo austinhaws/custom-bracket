@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Dao\PoolDao;
 use App\Enums\Roles;
-use App\Http\Requests;
 use App\Pool;
 use Auth;
 use Illuminate\Http\Request;
@@ -143,6 +142,16 @@ class PoolController extends Controller
 	{
 		Roles::checkIsRole([Roles::ADMIN]);
 		return view('pool-edit', ['pool' => json_encode($pool)]);
+	}
+
+	public function savePools(Request $request)
+	{
+		$data = json_decode($request->input('pools'));
+		foreach ($data as $pool) {
+			$poolArray = (array) $pool;
+			PoolDao::savePool($poolArray);
+		}
+		return json_encode(['success' => 'success']);
 	}
 
 	public function poolSave(Request $request)
