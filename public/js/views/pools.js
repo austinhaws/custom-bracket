@@ -75,9 +75,7 @@ ReactDOM.render(
 
 var BracketsBox = React.createClass({
 	getInitialState: function() {
-		return {bracket: {
-			pools: [{name: ''}, {name: ''}, {name: ''}, {name: ''}]
-		}};
+		return {};
 	},
 	componentDidMount: function() {
 		$.ajax({
@@ -85,7 +83,7 @@ var BracketsBox = React.createClass({
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
-				this.setState({bracket: data.length ? data[0] : false});
+				this.setState(data);
 		}.bind(this),
 		error: function(xhr, status, err) {
 			console.error(this.props.url, status, err.toString());
@@ -94,54 +92,57 @@ var BracketsBox = React.createClass({
 
 	},
 	render: function() {
-		var poolTL = this.state.bracket.pools.find(p => p.id == this.state.bracket.top_left_pool_id);
-		var poolBL = this.state.bracket.pools.find(p => p.id == this.state.bracket.bottom_left_pool_id);
-		var poolTR = this.state.bracket.pools.find(p => p.id == this.state.bracket.top_right_pool_id);
-		var poolBR = this.state.bracket.pools.find(p => p.id == this.state.bracket.bottom_right_pool_id);
+		var playDates;
+		if (Object.keys(this.state).length) {
+			var poolTL = this.state.pools.find(p => p.id == this.state.top_left_pool_id);
+			var poolBL = this.state.pools.find(p => p.id == this.state.bottom_left_pool_id);
+			var poolTR = this.state.pools.find(p => p.id == this.state.top_right_pool_id);
+			var poolBR = this.state.pools.find(p => p.id == this.state.bottom_right_pool_id);
 
-		// find first date after today and the previous was before today
-		var today = moment().startOf('day');
-		var playDates = [
-			{
-				name: 'Open for picking',
-				date: this.state.bracket.open_date
-			},
-			{
-				name: 'First Round (Day 1)',
-				date: this.state.bracket.first_round_date_day_1
-			},
-			{
-				name: 'First Round (Day 2)',
-				date: this.state.bracket.first_round_date_day_2
-			},
-			{
-				name: 'Second Round',
-				date: this.state.bracket.second_round_date
-			},
-			{
-				name: 'Sweet Sixteen',
-				date: this.state.bracket.third_round_date
-			},
-			{
-				name: 'Elite Eight',
-				date: this.state.bracket.fourth_round_date
-			},
-			{
-				name: 'Final Four',
-				date: this.state.bracket.fifth_round_date
-			},
-			{
-				name: 'Pandimensional Champion',
-				date: this.state.bracket.sixth_round_date
-			}
-		].map(function (date, idx, arr) {
-			var current = date.date && moment(date.date).diff(moment().startOf('day')) >= 0 && (idx == 0 || moment(arr[idx - 1].date).diff(moment().startOf('day')) < 0);
-			return (
-				<div className={'playRow ' + (current ? 'current' : '')} key={idx}>
-					<div className="dateLabel">{date.name}</div><div className="date">{date.date}</div>
-				</div>
-			);
-		});
+			playDates = [
+				{
+					name: 'Open for picking',
+					date: this.state.open_date
+				},
+				{
+					name: 'First Round (Day 1)',
+					date: this.state.first_round_date_day_1
+				},
+				{
+					name: 'First Round (Day 2)',
+					date: this.state.first_round_date_day_2
+				},
+				{
+					name: 'Second Round',
+					date: this.state.second_round_date
+				},
+				{
+					name: 'Sweet Sixteen',
+					date: this.state.third_round_date
+				},
+				{
+					name: 'Elite Eight',
+				},
+				{
+					name: 'Final Four',
+					date: this.state.fifth_round_date
+				},
+				{
+					name: 'Pandimensional Champion',
+					date: this.state.sixth_round_date
+				}
+			].map(function (date, idx, arr) {
+				var current = date.date && moment(date.date).diff(moment().startOf('day')) >= 0 && (idx == 0 || moment(arr[idx - 1].date).diff(moment().startOf('day')) < 0);
+				return (
+					<div className={'playRow ' + (current ? 'current' : '')} key={idx}>
+						<div className="dateLabel">{date.name}</div><div className="date">{date.date}</div>
+					</div>
+				);
+			});
+		} else {
+			playDates = '';
+		}
+
 		return (
 			<div className="bracket">
 				<div className="conferences">
@@ -172,7 +173,7 @@ var Bracket = React.createClass({
 		return (
 			<div className="bracket">
 			<h2 className="bracketName">
-				<a href={'bracket/' + this.props.bracket.id}>{this.props.bracket.name}</a> <span className="bracketDates"> {poolDateString(this.props.bracket.open_date, this.props.bracket.first_round_date)}</span> <a href={'bracket/scores/' + this.props.bracket.id}>View Scores</a>
+				<a href={'bracket/' + this.props.id}>{this.props.name}</a> <span className="bracketDates"> {poolDateString(this.props.open_date, this.props.first_round_date_day_1)}</span> <a href={'bracket/scores/' + this.props.id}>View Scores</a>
 			</h2>
 		</div>
 		);

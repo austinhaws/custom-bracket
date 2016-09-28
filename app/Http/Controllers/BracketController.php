@@ -32,10 +32,11 @@ class BracketController extends Controller
 	public function ajaxList()
 	{
 		$brackets = BracketDao::selectBrackets(false);
-		$bracket = $brackets[0];
+		$bracket = &$brackets[0];
 		$bracket->pools = PoolDao::selectPools(false);
+		$bracket->rolls = BracketDao::rankRollsForBracketId($bracket->id);
 
-		return json_encode($brackets);
+		return json_encode($bracket);
 	}
 
 	public function bracketAdd()
@@ -104,10 +105,16 @@ class BracketController extends Controller
 		Roles::checkIsRole([Roles::ADMIN]);
 
 		$bracket = $request->input('bracket');
+		$rolls = false;
+		if (isset($bracket['rolls'])) {
+			$rolls = $bracket['rolls'];
+			unset($bracket['rolls']);
+		}
 		BracketDao::saveBracket($bracket);
 
-		$rolls = $request->input('rolls');
-		BracketDao::saveBracketRolls($bracket['id'], $rolls);
+		if ($rolls) {
+			BracketDao::saveBracketRolls($bracket['id'], $rolls);
+		}
 
 		return json_encode($bracket);
 	}

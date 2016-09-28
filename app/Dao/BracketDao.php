@@ -90,8 +90,8 @@ class BracketDao
 		return DB::Select('
 			select 
 				case when open_date < now() then 1 else 0 end openDatePassed,
-				case when first_round_date < now() then 1 else 0 end firstRoundDatePassed,
-				case when second_round_date < now() then 1 else 0 end secondRoundDatePassed,
+				case when first_round_date_day_1 < now() then 1 else 0 end firstRoundDate1Passed,
+				case when second_round_date_day_2 < now() then 1 else 0 end secondRoundDate2Passed,
 				case when third_round_date < now() then 1 else 0 end thirdRoundDatePassed,
 				case when fourth_round_date < now() then 1 else 0 end fourthRoundDatePassed,
 				case when fifth_round_date < now() then 1 else 0 end fifthRoundDatePassed,
