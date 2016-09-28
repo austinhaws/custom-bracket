@@ -1,7 +1,8 @@
 var PoolsBox = React.createClass({
 	getInitialState: function() {
 		return {
-			pools: []
+			pools: [],
+			dirty: false
 		};
 	},
 	componentDidMount: function() {
@@ -10,7 +11,7 @@ var PoolsBox = React.createClass({
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
-				this.setState({pools: data});
+				this.setState({pools: data, dirty: false});
 			}.bind(this)
 		});
 	},
@@ -21,6 +22,8 @@ var PoolsBox = React.createClass({
 
 		var pool = this.state.pools.find(p => p.id == poolId);
 		pool[dateType] = newDate;
+
+		this.state.dirty = true;
 
 		this.setState(this.state);
 
@@ -40,6 +43,8 @@ var PoolsBox = React.createClass({
 					cache: false,
 					success: function(data) {
 						alert('Saved');
+						this.state.dirty = false;
+						this.setState(this.state);
 					}.bind(this)
 				});
 				break;
@@ -75,8 +80,8 @@ var PoolsBox = React.createClass({
 					</tbody>
 					<tfoot>
 						<tr><td colSpan="100">
-							<button type="button" className="btn btn-default" data-buttonType="cancel" onClick={this.buttonPressed}>Cancel</button>
-							<button type="button" className="btn btn-primary" data-buttontype="save" onClick={this.buttonPressed}>Save</button>
+							<button type="button" className="btn btn-default" disabled={!this.state.dirty} data-buttonType="cancel" onClick={this.buttonPressed}>Cancel</button>
+							<button type="button" className="btn btn-primary" disabled={!this.state.dirty} data-buttontype="save" onClick={this.buttonPressed}>Save</button>
 						</td></tr>
 					</tfoot>
 				</table>
@@ -89,7 +94,10 @@ var BracketBox = React.createClass({
 	// for now, only one bracket, can add more if this gets loved
 	getInitialState: function() {
 		return {
-			bracket: false
+			bracket: false,
+			rolls: false,
+			dirtyRolls: false,
+			dirtyBracket: false
 		};
 	},
 	componentDidMount: function(resetType) {
@@ -103,7 +111,9 @@ var BracketBox = React.createClass({
 				delete data.rolls;
 				this.setState({
 					bracket: (!resetType || resetType == 'bracket') ? data : this.state.bracket,
-					rolls: (!resetType || resetType == 'rolls') ? rolls : this.state.rolls
+					rolls: (!resetType || resetType == 'rolls') ? rolls : this.state.rolls,
+					dirtyBracket: resetType == 'bracket' ? false : this.state.dirtyBracket,
+					dirtyRolls: resetType == 'rolls' ? false : this.state.dirtyRolls
 				});
 			}.bind(this)
 		});
@@ -122,11 +132,13 @@ var BracketBox = React.createClass({
 					cache: false,
 					success: function(data) {
 						alert('Saved');
+						this.state.dirtyBracket = false;
+						this.setState(this.state);
 					}.bind(this)
 				});
 				break;
 			case 'saveRolls':
-
+console.log('save rolls');
 				break;
 			case 'cancelRolls':
 				this.componentDidMount('rolls');
@@ -140,12 +152,14 @@ var BracketBox = React.createClass({
 		var newDate = event.target.value;
 		var dateType = event.target.dataset.datetype;
 		this.state.bracket[dateType] = newDate;
+		this.state.dirtyBracket = true;
 		this.setState(this.state);
 	},
 	bracketRollChanged: function (event) {
 		var newRoll = event.target.value;
 		var rank = event.target.dataset.rank;
 		this.state.rolls[+rank - 1].roll = newRoll;
+		this.state.dirtyRolls = true;
 		this.setState(this.state);
 	},
 	render: function() {
@@ -177,7 +191,7 @@ var BracketBox = React.createClass({
 				</tr>
 			));
 		}
-
+console.log(this.state.dirtyBracket, this.state.dirtyRolls);
 		return (
 			<div className="bracketsBox inputTable">
 				<table id="bracketTable">
@@ -191,9 +205,9 @@ var BracketBox = React.createClass({
 					</tbody>
 					<tfoot>
 						<tr><td colSpan="100">
-						<button type="button" className="btn btn-default" data-buttonType="cancelDates" onClick={this.buttonPressed}>Cancel</button>
-					<button type="button" className="btn btn-primary" data-buttontype="saveDates" onClick={this.buttonPressed}>Save</button>
-					</td></tr>
+							<button type="button" className="btn btn-default" disabled={!this.state.dirtyBracket} data-buttonType="cancelDates" onClick={this.buttonPressed}>Cancel</button>
+							<button type="button" className="btn btn-primary" disabled={!this.state.dirtyBracket} data-buttontype="saveDates" onClick={this.buttonPressed}>Save</button>
+						</td></tr>
 					</tfoot>
 				</table>
 				<table id="bracketRollsTable">
@@ -207,8 +221,8 @@ var BracketBox = React.createClass({
 					</tbody>
 					<tfoot>
 						<tr><td colSpan="100">
-						<button type="button" className="btn btn-default" data-buttonType="cancelRolls" onClick={this.buttonPressed}>Cancel</button>
-					<button type="button" className="btn btn-primary" data-buttontype="saveRolls" onClick={this.buttonPressed}>Save</button>
+						<button type="button" className="btn btn-default" disabled={!this.state.dirtyRolls} data-buttonType="cancelRolls" onClick={this.buttonPressed}>Cancel</button>
+					<button type="button" className="btn btn-primary" disabled={!this.state.dirtyRolls} data-buttontype="saveRolls" onClick={this.buttonPressed}>Save</button>
 					</td></tr>
 					</tfoot>
 				</table>
