@@ -179,6 +179,7 @@ var BracketBox = React.createClass({
 		if (this.state.bracket) {
 			var that = this;
 			dateInputs = [
+				['open_date', 'Bracket Opens for Picks'],
 				['first_round_date_day_1', 'First Round (Day 1)'],
 				['first_round_date_day_2', 'First Round (Day 2)'],
 				['second_round_date', 'Second Round'],
@@ -190,7 +191,7 @@ var BracketBox = React.createClass({
 				return (
 					<tr key={o[0]}>
 						<td>{o[1]}</td>
-						<td><input onChange={that.bracketDateChanged} data-datetype={o[0]} className="form-control" placeholder="YYYY-MM-DD" type="text" value={that.state.bracket[o[0]]}/></td>
+						<td><input onChange={that.bracketDateChanged} data-datetype={o[0]} className="form-control" placeholder="YYYY-MM-DD" type="text" value={that.state.bracket[o[0]] ? that.state.bracket[o[0]] : ''}/></td>
 					</tr>
 				);
 			});
@@ -198,11 +199,10 @@ var BracketBox = React.createClass({
 			rollInputs = this.state.rolls.map(roll => (
 				<tr key={roll.id}>
 					<td>{'Rank ' + roll.rank}</td>
-					<td><input onChange={that.bracketRollChanged} data-rank={roll.rank} className="form-control" placeholder="0d0 + 0d0 - 0" type="text" value={roll.roll}/></td>
+					<td><input onChange={that.bracketRollChanged} data-rank={roll.rank} className="form-control" placeholder="0d0 + 0d0 - 0" type="text" value={roll.roll ? roll.roll : ''}/></td>
 				</tr>
 			));
 		}
-console.log(this.state.dirtyBracket, this.state.dirtyRolls);
 		return (
 			<div className="bracketsBox inputTable">
 				<table id="bracketTable">

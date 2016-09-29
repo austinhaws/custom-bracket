@@ -6,7 +6,7 @@
         <div class="row">
             <div class="col-md-10 col-md-offset-1">
                 <div class="panel panel-default">
-                    <div class="panel-heading h3">Conferences <span class="blurb">conference winners play in bracket championship</span></div>
+                    <div class="panel-heading h3">Conferences <span class="blurb">Top 16 of each conference play in bracket</span></div>
                     <div class="panel-body">
                         <div id="poolsBox" class="inputTable"></div>
                     </div>
