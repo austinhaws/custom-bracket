@@ -100,20 +100,25 @@ class BracketController extends Controller
 		]);
 	}
 
+	// can pass in rolls, bracket and also have rolls be an array in bracket
 	public function bracketSave(Request $request)
 	{
 		Roles::checkIsRole([Roles::ADMIN]);
 
 		$bracket = $request->input('bracket');
-		$rolls = false;
 		if (isset($bracket['rolls'])) {
 			$rolls = $bracket['rolls'];
 			unset($bracket['rolls']);
+		} else {
+			$rolls = $request->input('rolls');
 		}
-		BracketDao::saveBracket($bracket);
+
+		if ($bracket) {
+			BracketDao::saveBracket($bracket);
+		}
 
 		if ($rolls) {
-			BracketDao::saveBracketRolls($bracket['id'], $rolls);
+			BracketDao::saveBracketRolls($bracket ? $bracket['id'] : $rolls[0]['bracket_id'], $rolls);
 		}
 
 		return json_encode($bracket);

@@ -76,7 +76,7 @@ function poolDateStringFromPool(pool) {
 			if (!pool.open_date || pool.open_date == '0000-00-00') {
 				result = '';
 			} else {
-				result = pool.open_date;//momentWeeksDaysDifference(moment().startOf('day'), moment(pool.open_date));
+				result = pool.open_date;
 			}
 			break;
 

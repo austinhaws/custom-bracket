@@ -16,7 +16,24 @@ class BracketDao
 		return $brackets->get();
 	}
 
+	private static function cleanDate($date) {
+		return (!$date || $date == '0000-00-00') ? null : $date;
+	}
+
 	public static function saveBracket(&$bracket) {
+		$dates = [
+			'open_date',
+			'second_round_date',
+			'third_round_date',
+			'fourth_round_date',
+			'fifth_round_date',
+			'sixth_round_date',
+			'first_round_date_day_1',
+			'first_round_date_day_2',
+		];
+		foreach ($dates as $date) {
+			$bracket[$date] = BracketDao::cleanDate($bracket[$date]);
+		}
 		if ($bracket['id']) {
 			DB::table('brackets')->where('id', $bracket['id'])->update($bracket);
 		} else {
@@ -51,7 +68,7 @@ class BracketDao
 
 	public static function saveBracketRolls($bracketId, &$rolls) {
 		DB::table('bracket_rolls')->where(['bracket_id' => $bracketId])->delete();
-		
+
 		foreach ($rolls as $key => $DONTCARE) {
 			$roll =& $rolls[$key];
 			$roll['bracket_id'] = $bracketId;

@@ -138,7 +138,18 @@ var BracketBox = React.createClass({
 				});
 				break;
 			case 'saveRolls':
-console.log('save rolls');
+				$.ajax({
+					url: 'admin/bracket/save',
+					method: 'post',
+					data: csrf({rolls: this.state.rolls}),
+					dataType: 'json',
+					cache: false,
+					success: function(data) {
+						alert('Saved');
+						this.state.dirtyRolls = false;
+						this.setState(this.state);
+					}.bind(this)
+				});
 				break;
 			case 'cancelRolls':
 				this.componentDidMount('rolls');
