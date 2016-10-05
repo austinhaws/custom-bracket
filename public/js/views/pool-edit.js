@@ -1,5 +1,38 @@
 var defaultString = (s, def) => s ? s : def;
 
+const SaveButtonStates = {
+	noChanges: 0,
+	save: 1,
+	saving: 2,
+	saved: 3
+};
+var SaveButton = React.createClass({
+	propTypes: {
+		// use SaveButtonStates for possible values - determins how button looks/behaves
+		saveState: React.PropTypes.number.isRequired,
+
+		// can have a data-button=THISVALUE added to element for events to know what button was pressed
+		dataButton: React.PropTypes.string,
+
+		// the callback for when this button is clicked
+		buttonPressedCallback: React.PropTypes.func.isRequired
+	},
+	getInitialState: function () {
+		return {
+		};
+	},
+	render: function () {
+		var stateInfo = {
+			0: {title: 'No Changes', className: 'saveButton-noChanges', bootstrapButtonType: 'default'},
+			1: {title: 'Save', className: 'saveButton-save', bootstrapButtonType: 'primary'},
+			2: {title: 'Saving', className: 'saveButton-saving', bootstrapButtonType: 'warning'},
+			3: {title: '√ Saved!', className: 'saveButton-saved', bootstrapButtonType: 'success'}
+		}[this.props.saveState];
+		return (
+			<button className={'btn-' + stateInfo.bootstrapButtonType + ' btn ' + stateInfo.className} data-button={defaultString(this.props.dataButton, '')} disabled={this.props.saveState != SaveButtonStates.save} onClick={this.props.buttonPressedCallback}>{stateInfo.title}{this.props.saveState == 2 ? (<div className="spinner"></div>) : ''}</button>
+		);
+	}
+});
 
 var PoolForm = React.createClass({
 	getInitialState: function() {
@@ -12,10 +45,10 @@ var PoolForm = React.createClass({
 				open_date: '',
 				teams: []
 			},
-			dirty: false
+			saveState: SaveButtonStates.noChanges
 		};
 	},
-	componentDidMount: function () {
+	componentDidMount: function (nextState) {
 		if (this.state.poolId) {
 			$.ajax({
 				url: 'admin/pool/load/' + this.state.poolId,
@@ -27,7 +60,7 @@ var PoolForm = React.createClass({
 					this.state.teams = data.teams;
 					delete data.teams;
 					this.state.pool = data;
-					this.state.dirty = false;
+					this.state.saveState = nextState === undefined ? SaveButtonStates.noChanges : nextState;
 					this.setState(this.state);
 				}.bind(this)
 			});
@@ -41,7 +74,7 @@ var PoolForm = React.createClass({
 		// set state's pool's data type field
 		this.state.pool[dataType] = event.target.value;
 
-		this.state.dirty = true;
+		this.state.saveState = SaveButtonStates.save;
 
 		// set state
 		this.setState(this.state);
@@ -49,6 +82,8 @@ var PoolForm = React.createClass({
 	buttonPressed: function (event) {
 		switch (event.target.dataset['button']) {
 			case 'save':
+				this.state.saveState = SaveButtonStates.saving;
+				this.setState(this.state);
 				$.ajax({
 					url: 'pools/' + this.state.pool.id,
 					method: 'post',
@@ -56,14 +91,13 @@ var PoolForm = React.createClass({
 					dataType: 'json',
 					cache: false,
 					success: function(data) {
-						alert('Saved');
-						this.state.dirty = false;
+						this.state.saveState = SaveButtonStates.saved;
 						this.setState(this.state);
 					}.bind(this)
 				});
 				break;
 			case 'cancel':
-				this.componentDidMount();
+				this.componentDidMount(SaveButtonStates.noChanges);
 				break;
 			default:
 				console.error('Unknown button type:' + event.target.dataset['button']);
@@ -82,7 +116,6 @@ var PoolForm = React.createClass({
 			);
 		}
 
-
 		// can drag and drop between ranks to make list of 16
 		// put 16 cut off bar and those below that don't get ranked
 		// 		initial sort is by rank and then by # of picks
@@ -96,15 +129,15 @@ var PoolForm = React.createClass({
 						<div className="panel panel-default">
 							<div className="panel-heading h3">
 								<div className="form-group">
-									<ControlledInputText onChange={this.poolInputChanged} className="center-text" dataAttribs={{'data-datatype':'name'}} placeholder='Conference Name' initialValue={this.state.pool.name ? this.state.pool.name : ''}/>
+									<ControlledInputText onChange={this.poolInputChanged} className="center-text h4" dataAttribs={{'data-datatype':'name'}} placeholder='Conference Name' initialValue={this.state.pool.name ? this.state.pool.name : ''}/>
 								</div>
 								<div className="subtitle">
 									<div className="dataNugget form-group"><label>Open Date:</label><ControlledInputText onChange={this.poolInputChanged} dataAttribs={{'data-datatype':'open_date'}} placeholder='YYYY-MM-DD' initialValue={defaultString(this.state.pool.open_date, '')}/></div>
 									<div className="dataNugget form-group"><label>Close Date:</label><ControlledInputText onChange={this.poolInputChanged} dataAttribs={{'data-datatype':'closing_date'}} placeholder='YYYY-MM-DD' initialValue={defaultString(this.state.pool.closing_date, '')}/></div>
 								</div>
 								<div className="form-buttons-div form-group">
-									<button className="btn-default btn" data-button="cancel" disabled={!this.state.dirty} onClick={this.buttonPressed}>Cancel</button>
-									<button className="btn-primary btn" data-button="save" disabled={!this.state.dirty} onClick={this.buttonPressed}>Save</button>
+									<button className="btn-default btn" data-button="cancel" disabled={this.state.saveState != SaveButtonStates.save} onClick={this.buttonPressed}>Cancel</button>
+									<SaveButton saveState={this.state.saveState} dataButton="save" buttonPressedCallback={this.buttonPressed}/>
 								</div>
 							</div>
 							<div className="panel-body">

@@ -318,3 +318,17 @@ input, .listRow {
 .form-buttons-div button:last-child {
 	margin-right: 0;
 }
+
+.spinner {
+	background-image: url('../img/spinning.gif');
+	height: 16px;
+	width: 16px;
+	display: inline-block;
+	margin-left: 5px;
+	position: relative;
+	top: 4px;
+}
+
+.h4 {
+	font-size: 20px;
+}
