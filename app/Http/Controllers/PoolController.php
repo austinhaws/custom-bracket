@@ -32,6 +32,12 @@ class PoolController extends Controller
 		return json_encode($pools);
 	}
 
+	public function ajaxLoad($poolId) {
+		$pool = PoolDao::selectPools(['id' => $poolId])[0];
+		$pool->teams = PoolDao::selectTeamsListForPool($poolId);
+		return json_encode($pool);
+	}
+
 	public function pool($id)
 	{
 		return view('pool', ['poolId' => $id]);
@@ -122,26 +128,18 @@ class PoolController extends Controller
 
 	public function poolAdd()
 	{
-		return $this->editPoolView([
-			'id' => '',
-			'name' => '',
-			'closing_date' => '',
-			'open_date' => '',
-			'teams' => [],
-		]);
+		return $this->editPoolView(false);
 	}
 
 	public function poolEdit($id)
 	{
-		$pool = Pool::where('id', $id)->first();
-		$pool['teams'] = PoolDao::selectTeamsListForPool($pool['id']);
-		return $this->editPoolView($pool);
+		return $this->editPoolView($id);
 	}
 
-	private function editPoolView($pool)
+	private function editPoolView($poolId)
 	{
 		Roles::checkIsRole([Roles::ADMIN]);
-		return view('pool-edit', ['pool' => json_encode($pool)]);
+		return view('pool-edit', ['poolId' => $poolId]);
 	}
 
 	public function savePools(Request $request)
@@ -152,6 +150,16 @@ class PoolController extends Controller
 			PoolDao::savePool($poolArray);
 		}
 		return json_encode(['success' => 'success']);
+	}
+
+	public function postPool($poolId, Request $request)
+	{
+		$pool = json_decode($request->input('pool'));
+		if ($poolId == $pool->id) {
+			$poolArray = (array) $pool;
+			PoolDao::savePool($poolArray);
+			echo json_encode(['success' => 'success']);
+		}
 	}
 
 	public function poolSave(Request $request)

@@ -2,7 +2,7 @@
 
 @section('content')
     <script>
-        globals.pool = <?=$pool?>;
+        globals.poolId = <?=$poolId?>;
     </script>
 
     <div id="pool-form"></div>

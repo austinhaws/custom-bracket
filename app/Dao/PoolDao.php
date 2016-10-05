@@ -14,12 +14,12 @@ class PoolDao
 				pool_entries.id id,
 				pool_entries.name name,
 				pool_entries.rank rank,
-				(select count(*) from user_x_pool_team_entries uxpte where uxpte.pool_entry_id = pool_entries.id) votes
+				sum(case when user_id is not null then 1 else 0 end) votes
 			from pool_entries
 			left join user_x_pool_team_entries on user_x_pool_team_entries.pool_entry_id = pool_entries.id
 			where pool_id = ?
+			group by pool_entries.pool_id, pool_entries.id, pool_entries.name, pool_entries.rank
 			order by votes desc, lower(name) asc
-			limit 16
 		', [$poolId]);
 	}
 

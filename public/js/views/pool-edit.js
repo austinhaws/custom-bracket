@@ -1,58 +1,154 @@
+var defaultString = (s, def) => s ? s : def;
+
+
 var PoolForm = React.createClass({
 	getInitialState: function() {
 		return {
-			id: this.props.initialPool.id,
-			name: this.props.initialPool.name,
-			open_date: this.props.initialPool.open_date ? this.props.initialPool.open_date : '',
-			close_date: this.props.initialPool.closing_date ? this.props.initialPool.closing_date : '',
-			teams: this.props.initialPool.teams
+			poolId: this.props.initialPoolId,
+			pool: {
+				id: false,
+				name: '',
+				closing_date: '',
+				open_date: '',
+				teams: []
+			},
+			dirty: false
 		};
 	},
-	handleChange: function(e) {
-		var nextState = {};
-		nextState[e.target.name] = e.target.value;
-		this.setState(nextState);
-	},
-	handleSubmit: function(e) {
-		e.preventDefault();
-		if (!this.state.name) {
-			alert('Must have a name to continue');
-		} else {
+	componentDidMount: function () {
+		if (this.state.poolId) {
 			$.ajax({
-				url: 'admin/pool/save',
-				dataType: 'json',
-				data: csrf($.extend({teams: this.props.initialPool.teams}, this.state)),
-				cache: false,
+				url: 'admin/pool/load/' + this.state.poolId,
 				method: 'post',
+				data: csrf(),
+				dataType: 'json',
+				cache: false,
 				success: function(data) {
-					// show a spinner instead
-					alert('saved');
-				}.bind(this),
-				error: function(xhr, status, err) {
-					console.error(this.props.url, status, err.toString());
+					this.state.teams = data.teams;
+					delete data.teams;
+					this.state.pool = data;
+					this.state.dirty = false;
+					this.setState(this.state);
 				}.bind(this)
 			});
+
+		}
+	},
+	poolInputChanged: function (event) {
+		// get data type attribute
+		var dataType = event.target.dataset['datatype'];
+
+		// set state's pool's data type field
+		this.state.pool[dataType] = event.target.value;
+
+		this.state.dirty = true;
+
+		// set state
+		this.setState(this.state);
+	},
+	buttonPressed: function (event) {
+		switch (event.target.dataset['button']) {
+			case 'save':
+				$.ajax({
+					url: 'pools/' + this.state.pool.id,
+					method: 'post',
+					data: csrf({pool: JSON.stringify(this.state.pool)}),
+					dataType: 'json',
+					cache: false,
+					success: function(data) {
+						alert('Saved');
+						this.state.dirty = false;
+						this.setState(this.state);
+					}.bind(this)
+				});
+				break;
+			case 'cancel':
+				this.componentDidMount();
+				break;
+			default:
+				console.error('Unknown button type:' + event.target.dataset['button']);
+				break;
 		}
 	},
 	render: function() {
+		var ranks = [];
+		for (var x = 1; x <= 16; x++) {
+			ranks.push(<div key={x} className="listRow">{x <= 16 ? x : ''}</div>);
+		}
+		var teams = [];
+		if (this.state.teams && this.state.teams.length) {
+			teams = this.state.teams.map(team =>
+				<div key={team.id} className="listRow" data-teamid={team.id}>{team.name} <span className="teamVotes">{team.votes > 0 ? team.votes + ' vote' + (team.votes > 1 ? 's' : '') : ''}</span></div>
+			);
+		}
+
+
+		// can drag and drop between ranks to make list of 16
+		// put 16 cut off bar and those below that don't get ranked
+		// 		initial sort is by rank and then by # of picks
+		// 		save/cancel at bottom
+
 		return (
-			<form>
-				<input type="hidden" name={this.props.csrfName} value={this.props.csrf}/>
-				<input type="hidden" name="poolId" value={this.state.id}/>
-				<label for="name">Name:</label><input type="text" id="name" name="name" value={this.state.name} onChange={this.handleChange}/><br/>
-				<label for="Open Date">Open Date:</label><input type="text" id="open_date" name="open_date" placeholder="YYYY-MM-DD" value={this.state.open_date} onChange={this.handleChange}/><br/>
-				<label for="Close Date">Close Date:</label><input type="text" id="close_date" name="close_date" placeholder="YYYY-MM-DD" value={this.state.close_date} onChange={this.handleChange}/><br/>
 
-				<span id="info-blurb">
-					After the 'Open Date' people can pick which teams in a pool will be in the bracket as well as enter new teams.<br/>
-					After the 'Close Date' people can no longer pick teams nor enter new teams and the pool is ready to be used in a bracket.
-				</span>
+			<div className="container">
+				<div className="row">
+					<div className="col-md-10 col-md-offset-1">
+						<div className="panel panel-default">
+							<div className="panel-heading h3">
+								<div className="form-group">
+									<ControlledInputText onChange={this.poolInputChanged} className="center-text" dataAttribs={{'data-datatype':'name'}} placeholder='Conference Name' initialValue={this.state.pool.name ? this.state.pool.name : ''}/>
+								</div>
+								<div className="subtitle">
+									<div className="dataNugget form-group"><label>Open Date:</label><ControlledInputText onChange={this.poolInputChanged} dataAttribs={{'data-datatype':'open_date'}} placeholder='YYYY-MM-DD' initialValue={defaultString(this.state.pool.open_date, '')}/></div>
+									<div className="dataNugget form-group"><label>Close Date:</label><ControlledInputText onChange={this.poolInputChanged} dataAttribs={{'data-datatype':'closing_date'}} placeholder='YYYY-MM-DD' initialValue={defaultString(this.state.pool.closing_date, '')}/></div>
+								</div>
+								<div className="form-buttons-div form-group">
+									<button className="btn-default btn" data-button="cancel" disabled={!this.state.dirty} onClick={this.buttonPressed}>Cancel</button>
+									<button className="btn-primary btn" data-button="save" disabled={!this.state.dirty} onClick={this.buttonPressed}>Save</button>
+								</div>
+							</div>
+							<div className="panel-body">
+								<div className="poolContainer">
+									<div className="ranksContainer">{ranks}</div>
+									<div className="teamsContainer">{teams}</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
-				<PoolList initialTeams={this.state.teams}/>
-
-				<button onClick={this.handleSubmit}>Save</button>
-			</form>
 		);
+	}
+});
+
+// this is a controlled input text field; its state is stored by the parent and the parent is told when to change through the onchange callback
+var ControlledInputText = React.createClass({
+	propTypes: {
+		// callback when value changes
+		onChange: React.PropTypes.func.isRequired,
+		// map of data attributes to add to the input: ie data-datetype
+		dataAttribs: React.PropTypes.object,
+		// classNames to put on the input
+		className: React.PropTypes.string,
+		// placeholder text
+		placeholder: React.PropTypes.string,
+		// start value in the input
+		initialValue: React.PropTypes.string.isRequired
+	},
+	componentDidMount: function () {
+		// http://stackoverflow.com/questions/31273093/how-to-add-custom-html-attributes-in-jsx
+		if (this.props.dataAttribs) {
+			var ref = this.refs.myInput;
+			Object.keys(this.props.dataAttribs).forEach(key => ref.setAttribute(key, this.props.dataAttribs[key]));
+		};
+	},
+	render: function () {
+		var dataAttribStr = '';
+		if (this.dataAttribs) {
+			dataAttribStr = Object.keys(this.dataAttribs).reduce((output, key) => output + ' ' + 'key="' + this.dataAttribs[key] + '"', '');
+		}
+		return <input ref="myInput" onChange={this.props.onChange} className={'form-control ' + this.props.className} placeholder={this.props.placeholder} type="text" value={this.props.initialValue}/>
 	}
 });
 
@@ -110,6 +206,6 @@ var Team = React.createClass({
 });
 
 ReactDOM.render(
-	<PoolForm initialPool={globals.pool} csrfName={globals.csrfName} csrf={globals.csrf}/>,
+	<PoolForm initialPoolId={globals.poolId}/>,
 	document.getElementById('pool-form')
 );

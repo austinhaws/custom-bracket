@@ -275,10 +275,46 @@ body {
 .inputTable tfoot td button:first-child {
 	margin-right: 10px;
 }
-input {
+input, .listRow {
 	font-family: monospace;
+	font-size: 18px;
 }
 
 .panel-heading {
-	font-size: 17px;
+	font-size: 15px;
+}
+.label {
+	color: #555;
+}
+.poolContainer {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+
+}
+.poolContainer > div:first-child {
+	margin-right: 10px;
+}
+.center-text {
+	text-align: center;
+}
+.teamVotes {
+	font-style: italic;
+	margin-left: 10px;
+	font-size: 14px;
+	color: #999;
+}
+.form-buttons-div {
+	text-align: right;
+}
+.ranksContainer {
+	text-align: right;
+	padding-right: 5px;
+	color: #666;
+}
+.form-buttons-div button {
+	margin-right: 5px;
+}
+.form-buttons-div button:last-child {
+	margin-right: 0;
 }
