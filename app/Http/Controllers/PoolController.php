@@ -82,21 +82,15 @@ class PoolController extends Controller
 		// get teamName from post
 		$name = $request->input('name');
 
-		// check that the logged in user has a pick left
-		$picksLeft = $this->picksLeftForPoolId($poolId);
-
 		$team = false;
 
-		// add the team to the pool
-		if ($picksLeft) {
-			// create the team
-			$teamId = PoolDao::insertPoolTeamEntry($poolId, $name);
+		// create the team
+		$teamId = PoolDao::insertPoolTeamEntry($poolId, $name);
 
-			$team = PoolDao::selectTeamById($teamId);
+		$team = PoolDao::selectTeamById($teamId);
 
-			// pick the team
-			PoolDao::insertUserPoolTeamEntry(Auth::user()->id, $teamId);
-		}
+		// pick the team
+		PoolDao::insertUserPoolTeamEntry(Auth::user()->id, $teamId);
 
 		echo json_encode($team);
 	}

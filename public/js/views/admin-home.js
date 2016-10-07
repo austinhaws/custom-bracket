@@ -2,7 +2,7 @@ var PoolsBox = React.createClass({
 	getInitialState: function() {
 		return {
 			pools: [],
-			dirty: false
+			saveState: SaveButtonStates.noChanges
 		};
 	},
 	componentDidMount: function() {
@@ -11,7 +11,7 @@ var PoolsBox = React.createClass({
 			dataType: 'json',
 			cache: false,
 			success: function(data) {
-				this.setState({pools: data, dirty: false});
+				this.setState({pools: data, saveState: SaveButtonStates.noChanges});
 			}.bind(this)
 		});
 	},
@@ -23,18 +23,20 @@ var PoolsBox = React.createClass({
 		var pool = this.state.pools.find(p => p.id == poolId);
 		pool[dateType] = newDate;
 
-		this.state.dirty = true;
+		this.state.saveState = SaveButtonStates.save;
 
 		this.setState(this.state);
 
 		// toggle save/cancel button status
 	},
 	buttonPressed: function (event) {
-		switch (event.target.dataset.buttontype) {
+		switch (event.target.dataset.button) {
 			case 'cancel':
 				this.componentDidMount();
 				break;
 			case 'save':
+				this.state.saveState = SaveButtonStates.saving;
+				this.setState(this.state);
 				$.ajax({
 					url: 'admin/pool/savePools',
 					method: 'post',
@@ -42,14 +44,13 @@ var PoolsBox = React.createClass({
 					dataType: 'json',
 					cache: false,
 					success: function(data) {
-						alert('Saved');
-						this.state.dirty = false;
+						this.state.saveState = SaveButtonStates.saved;
 						this.setState(this.state);
 					}.bind(this)
 				});
 				break;
 			default:
-				console.error('Unknown button type:' + event.target.dataset.buttontype);
+				console.error('Unknown button type:' + event.target.dataset.button);
 				break;
 		}
 	},
@@ -80,8 +81,7 @@ var PoolsBox = React.createClass({
 					</tbody>
 					<tfoot>
 						<tr><td colSpan="100">
-							<button type="button" className="btn btn-default" disabled={!this.state.dirty} data-buttonType="cancel" onClick={this.buttonPressed}>Cancel</button>
-							<button type="button" className="btn btn-primary" disabled={!this.state.dirty} data-buttontype="save" onClick={this.buttonPressed}>Save</button>
+							<SaveCancelButtons saveState={this.state.saveState} dataButton="save" buttonPressedCallback={this.buttonPressed}/>
 						</td></tr>
 					</tfoot>
 				</table>
@@ -96,8 +96,8 @@ var BracketBox = React.createClass({
 		return {
 			bracket: false,
 			rolls: false,
-			dirtyRolls: false,
-			dirtyBracket: false
+			rollsSaveState: SaveButtonStates.noChanges,
+			bracketSaveState: SaveButtonStates.noChanges
 		};
 	},
 	componentDidMount: function(resetType) {
@@ -112,18 +112,20 @@ var BracketBox = React.createClass({
 				this.setState({
 					bracket: (!resetType || resetType == 'bracket') ? data : this.state.bracket,
 					rolls: (!resetType || resetType == 'rolls') ? rolls : this.state.rolls,
-					dirtyBracket: resetType == 'bracket' ? false : this.state.dirtyBracket,
-					dirtyRolls: resetType == 'rolls' ? false : this.state.dirtyRolls
+					bracketSaveState: resetType == 'bracket' ? SaveButtonStates.noChanges : this.state.bracketSaveState,
+					rollsSaveState: resetType == 'rolls' ? SaveButtonStates.noChanges : this.state.rollsSaveState
 				});
 			}.bind(this)
 		});
 	},
 	buttonPressed: function (event) {
-		switch (event.target.dataset.buttontype) {
+		switch (event.target.dataset.button) {
 			case 'cancelDates':
 				this.componentDidMount('bracket');
 				break;
 			case 'saveDates':
+				this.state.bracketSaveState = SaveButtonStates.saving;
+				this.setState(this.state);
 				$.ajax({
 					url: 'admin/bracket/save',
 					method: 'post',
@@ -131,13 +133,14 @@ var BracketBox = React.createClass({
 					dataType: 'json',
 					cache: false,
 					success: function(data) {
-						alert('Saved');
-						this.state.dirtyBracket = false;
+						this.state.bracketSaveState = SaveButtonStates.saved;
 						this.setState(this.state);
 					}.bind(this)
 				});
 				break;
 			case 'saveRolls':
+				this.state.rollsSaveState = SaveButtonStates.saving;
+				this.setState(this.state);
 				$.ajax({
 					url: 'admin/bracket/save',
 					method: 'post',
@@ -145,8 +148,7 @@ var BracketBox = React.createClass({
 					dataType: 'json',
 					cache: false,
 					success: function(data) {
-						alert('Saved');
-						this.state.dirtyRolls = false;
+						this.state.rollsSaveState = SaveButtonStates.saved;
 						this.setState(this.state);
 					}.bind(this)
 				});
@@ -155,7 +157,7 @@ var BracketBox = React.createClass({
 				this.componentDidMount('rolls');
 				break;
 			default:
-				console.error('Unknown button type:' + event.target.dataset.buttontype);
+				console.error('Unknown button type:' + event.target.dataset.button);
 				break;
 		}
 	},
@@ -163,14 +165,14 @@ var BracketBox = React.createClass({
 		var newDate = event.target.value;
 		var dateType = event.target.dataset.datetype;
 		this.state.bracket[dateType] = newDate;
-		this.state.dirtyBracket = true;
+		this.state.bracketSaveState = SaveButtonStates.save;
 		this.setState(this.state);
 	},
 	bracketRollChanged: function (event) {
 		var newRoll = event.target.value;
 		var rank = event.target.dataset.rank;
 		this.state.rolls[+rank - 1].roll = newRoll;
-		this.state.dirtyRolls = true;
+		this.state.rollsSaveState = SaveButtonStates.save;
 		this.setState(this.state);
 	},
 	render: function() {
@@ -216,8 +218,7 @@ var BracketBox = React.createClass({
 					</tbody>
 					<tfoot>
 						<tr><td colSpan="100">
-							<button type="button" className="btn btn-default" disabled={!this.state.dirtyBracket} data-buttonType="cancelDates" onClick={this.buttonPressed}>Cancel</button>
-							<button type="button" className="btn btn-primary" disabled={!this.state.dirtyBracket} data-buttontype="saveDates" onClick={this.buttonPressed}>Save</button>
+							<SaveCancelButtons saveState={this.state.bracketSaveState} dataButtonSuffix="Dates" buttonPressedCallback={this.buttonPressed}/>
 						</td></tr>
 					</tfoot>
 				</table>
@@ -232,8 +233,7 @@ var BracketBox = React.createClass({
 					</tbody>
 					<tfoot>
 						<tr><td colSpan="100">
-						<button type="button" className="btn btn-default" disabled={!this.state.dirtyRolls} data-buttonType="cancelRolls" onClick={this.buttonPressed}>Cancel</button>
-					<button type="button" className="btn btn-primary" disabled={!this.state.dirtyRolls} data-buttontype="saveRolls" onClick={this.buttonPressed}>Save</button>
+							<SaveCancelButtons saveState={this.state.rollsSaveState} dataButtonSuffix="Rolls" buttonPressedCallback={this.buttonPressed}/>
 					</td></tr>
 					</tfoot>
 				</table>

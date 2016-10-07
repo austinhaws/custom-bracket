@@ -118,3 +118,6 @@ function poolDateString(teamOpenDate, teamCloseDate) {
 
 	return dateString;
 }
+
+var defaultString = (s, def) => s ? s : def;
+

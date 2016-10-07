@@ -1,39 +1,3 @@
-var defaultString = (s, def) => s ? s : def;
-
-const SaveButtonStates = {
-	noChanges: 0,
-	save: 1,
-	saving: 2,
-	saved: 3
-};
-var SaveButton = React.createClass({
-	propTypes: {
-		// use SaveButtonStates for possible values - determins how button looks/behaves
-		saveState: React.PropTypes.number.isRequired,
-
-		// can have a data-button=THISVALUE added to element for events to know what button was pressed
-		dataButton: React.PropTypes.string,
-
-		// the callback for when this button is clicked
-		buttonPressedCallback: React.PropTypes.func.isRequired
-	},
-	getInitialState: function () {
-		return {
-		};
-	},
-	render: function () {
-		var stateInfo = {
-			0: {title: 'No Changes', className: 'saveButton-noChanges', bootstrapButtonType: 'default'},
-			1: {title: 'Save', className: 'saveButton-save', bootstrapButtonType: 'primary'},
-			2: {title: 'Saving', className: 'saveButton-saving', bootstrapButtonType: 'warning'},
-			3: {title: '√ Saved!', className: 'saveButton-saved', bootstrapButtonType: 'success'}
-		}[this.props.saveState];
-		return (
-			<button className={'btn-' + stateInfo.bootstrapButtonType + ' btn ' + stateInfo.className} data-button={defaultString(this.props.dataButton, '')} disabled={this.props.saveState != SaveButtonStates.save} onClick={this.props.buttonPressedCallback}>{stateInfo.title}{this.props.saveState == 2 ? (<div className="spinner"></div>) : ''}</button>
-		);
-	}
-});
-
 var PoolForm = React.createClass({
 	getInitialState: function() {
 		return {
@@ -116,11 +80,6 @@ var PoolForm = React.createClass({
 			);
 		}
 
-		// can drag and drop between ranks to make list of 16
-		// put 16 cut off bar and those below that don't get ranked
-		// 		initial sort is by rank and then by # of picks
-		// 		save/cancel at bottom
-
 		return (
 
 			<div className="container">
@@ -136,8 +95,7 @@ var PoolForm = React.createClass({
 									<div className="dataNugget form-group"><label>Close Date:</label><ControlledInputText onChange={this.poolInputChanged} dataAttribs={{'data-datatype':'closing_date'}} placeholder='YYYY-MM-DD' initialValue={defaultString(this.state.pool.closing_date, '')}/></div>
 								</div>
 								<div className="form-buttons-div form-group">
-									<button className="btn-default btn" data-button="cancel" disabled={this.state.saveState != SaveButtonStates.save} onClick={this.buttonPressed}>Cancel</button>
-									<SaveButton saveState={this.state.saveState} dataButton="save" buttonPressedCallback={this.buttonPressed}/>
+									<SaveCancelButtons saveState={this.state.saveState} dataButton="save" buttonPressedCallback={this.buttonPressed}/>
 								</div>
 							</div>
 							<div className="panel-body">

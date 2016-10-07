@@ -24,5 +24,6 @@
         </div>
     </div>
 
+    <script type="text/babel" src="js/components/saveButton.js"></script>
     <script type="text/babel" src="js/views/admin-home.js"></script>
 @endsection
