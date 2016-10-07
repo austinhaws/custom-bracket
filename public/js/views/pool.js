@@ -91,7 +91,9 @@ var PoolBox = React.createClass({
 var TeamList = React.createClass({
 	render: function() {
 		var that = this;
-		var teamNodes = this.props.data.map(function(team) {
+		var firstTeams = this.props.data.slice(0, 20).sort((a, b) => a.name.localeCompare(b.name));
+
+		var teamNodes = firstTeams.concat(this.props.data.slice(20).sort((a, b) => a.name.localeCompare(b.name))).map(function(team) {
 			return (
 				<Team name={team.name} key={team.id} id={team.id} initialPicked={team.picked} usePickCallback={that.props.usePickCallback}/>
 			);
