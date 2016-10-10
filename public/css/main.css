@@ -200,7 +200,7 @@ body {
 }
 #bracketsBox .conferences, #bracketsBox .playDates {
 	float: left;
-	height: 204px;
+	height: 231px;
 }
 #bracketsBox .playDates {
 	display: flex;
@@ -334,4 +334,9 @@ input, .listRow {
 
 .h4 {
 	font-size: 20px;
+}
+.makeYourPick {
+	position: absolute;
+	top: 112px;
+	left: 200px;
 }

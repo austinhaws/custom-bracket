@@ -74,10 +74,10 @@ ReactDOM.render(
 
 
 var BracketsBox = React.createClass({
-	getInitialState: function() {
+	getInitialState: function () {
 		return {};
 	},
-	componentDidMount: function() {
+	componentDidMount: function () {
 		$.ajax({
 			url: 'bracket/list',
 			dataType: 'json',
@@ -90,6 +90,9 @@ var BracketsBox = React.createClass({
 		}.bind(this)
 	});
 
+	},
+	buttonClicked: function (event) {
+		window.location = 'view/bracket';
 	},
 	render: function() {
 		var playDates;
@@ -122,6 +125,7 @@ var BracketsBox = React.createClass({
 				},
 				{
 					name: 'Elite Eight',
+					date: this.state.fourth_round_date
 				},
 				{
 					name: 'Final Four',
@@ -142,6 +146,12 @@ var BracketsBox = React.createClass({
 		} else {
 			playDates = '';
 		}
+		var makePicksButton;
+		if (this.state.open_date && moment(this.state.open_date).diff(moment().startOf('day')) <= 0) {
+			makePicksButton = (<div className="makeYourPick"><button className="btn btn-danger" onClick={this.buttonClicked}>Make Your Picks</button></div>);
+		} else {
+			makePicksButton = '';
+		}
 
 		return (
 			<div className="bracket">
@@ -152,6 +162,7 @@ var BracketsBox = React.createClass({
 						<div className="conference">{poolBL ? poolBL.name : ''}</div>
 					</div>
 					<div className="column">
+						{makePicksButton}
 						<div className="vs">vs</div>
 					</div>
 					<div className="column">
