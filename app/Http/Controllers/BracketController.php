@@ -266,6 +266,15 @@ class BracketController extends Controller
 		echo json_encode(['success' => 'success']);
 	}
 
+
+	/**
+	 * go to the bracket view page for a player
+	 */
+	public function playerBracketView() {
+		// data is ajaxed so no need to do anything but go to a page
+		return view('player-bracket-pick');
+	}
+
 	/**
 	 * show a bracket and let the user make picks on it
 	 *
@@ -584,5 +593,34 @@ class BracketController extends Controller
 				break;
 		}
 		return $points + ($upset ? $points : 0);
+	}
+
+	public function dataPlayerBracket() {
+		// current logged in user
+		$userId = Auth::user()->id;
+
+		// bracket for dates of rounds
+		$bracket = BracketDao::selectBrackets([])[0];
+
+		// get user's picks
+		$userBracketGames = BracketDao::selectUserBracketGames(['user_id' => $userId]);
+
+		// get the games played
+		$bracketGames = BracketDao::selectBracketGames($bracket->id, false);
+
+		// get pools names/ids for the bracket
+		$pools = PoolDao::selectPools([]);
+
+		// teams for the pool
+		foreach ($pools as $key => $DONTUSE) {
+			$pools[$key]->entries = PoolDao::selectTeamsListForPool($pools[$key]->id, true);
+		}
+
+		echo json_encode([
+			'bracket' => $bracket,
+			'picks' => $userBracketGames,
+			'pools' => $pools,
+			'games' => $bracketGames,
+		]);
 	}
 }

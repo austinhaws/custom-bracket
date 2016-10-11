@@ -6,7 +6,7 @@ use DB;
 
 class PoolDao
 {
-	public static function selectTeamsListForPool($poolId)
+	public static function selectTeamsListForPool($poolId, $ranks = false)
 	{
 		return DB::Select('
 			select
@@ -18,8 +18,10 @@ class PoolDao
 			from pool_entries
 			left join user_x_pool_team_entries on user_x_pool_team_entries.pool_entry_id = pool_entries.id
 			where pool_id = ?
+			' . ($ranks ? ' AND rank is not null AND rank <> \'\'' : '')
+			. '
 			group by pool_entries.pool_id, pool_entries.id, pool_entries.name, pool_entries.rank
-			order by votes desc, lower(name) asc
+			order by rank asc, votes desc, lower(name) asc
 		', [$poolId]);
 	}
 

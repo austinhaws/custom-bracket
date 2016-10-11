@@ -12,6 +12,7 @@
 */
 
 // TODO: use controller classes instead of route definitions here
+// TODO: use RESTful calls for ajax data
 
 // -- starting routes -- //
 // base route
@@ -52,7 +53,10 @@ Route::post('/pool/enterTeam', 'PoolController@enterTeam');
 Route::get('/bracket/list', 'BracketController@ajaxList');
 
 // load the bracket picker view for the user to pick on
-Route::get('/bracket/{id}', 'BracketController@bracketPicks');
+Route::get('bracket/{id}', 'BracketController@bracketPicks');
+
+// since switched to a single bracket paradigm, this goes to the current user's bracket
+Route::get('/view/bracket', 'BracketController@playerBracketView');
 
 // make a bracket pick
 Route::post('/bracket/pick', 'BracketController@bracketPick');
@@ -77,4 +81,5 @@ Route::post('/admin/bracket/score/save', 'BracketController@bracketScoreSave');
 // RESTful
 // Pool
 Route::post('/pools/{id}', 'PoolController@postPool');
+Route::get('/bracket', 'BracketController@dataPlayerBracket');
 

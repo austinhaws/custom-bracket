@@ -340,3 +340,26 @@ input, .listRow {
 	top: 112px;
 	left: 200px;
 }
+
+#bracket-form .conference .roundList {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	height: 400px;
+	float: left;
+	width: 100px;
+}
+#bracket-form .conference .roundList.entries {
+	font-size: 10px;
+}
+.conferencesColumn {
+	float: left;
+	width: 500px;
+}
+.roundList .entry:nth-child(2n) {
+	border-bottom: 1px solid #eee;
+	padding-bottom: 5px;
+}
+.roundList .entry:last-child {
+	border-bottom: none;
+}
