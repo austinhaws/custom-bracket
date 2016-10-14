@@ -81,5 +81,9 @@ Route::post('/admin/bracket/score/save', 'BracketController@bracketScoreSave');
 // RESTful
 // Pool
 Route::post('/pools/{id}', 'PoolController@postPool');
+
+// Bracket
 Route::get('/bracket', 'BracketController@dataPlayerBracket');
 
+// Bracket Pick
+Route::post('/bracket/pick/{gameId}/{team1Id}/{team2Id}/{teamId}', 'BracketController@bracketPickSave');

@@ -623,4 +623,18 @@ class BracketController extends Controller
 			'games' => $bracketGames,
 		]);
 	}
+
+	public function bracketPickSave($gameId, $team1Id, $team2Id, $winningTeamId) {
+		$userId = Auth::user()->id;
+
+		// delete entry for this team in database
+		BracketDao::deleteUserBracketGames(['user_id' => $userId, 'bracket_game_id' => $gameId]);
+
+		// if teamId != -1 then insert new entry
+		$game = false;
+		if ($winningTeamId >= 0) {
+			$game = BracketDao::insertUserBracketGame($userId, $gameId, $team1Id, $team2Id, $winningTeamId);
+		}
+		echo json_encode($game ? $game : ['result' => 'game deleted']);
+	}
 }

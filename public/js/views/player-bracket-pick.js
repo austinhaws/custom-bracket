@@ -5,6 +5,8 @@ var BracketPick = React.createClass({
 			conferences: false
 		};
 	},
+	// list of all teams in the bracket
+	teams: false,
 	componentDidMount: function () {
 		// ajax data
 		$.ajax({
@@ -12,18 +14,18 @@ var BracketPick = React.createClass({
 			dataType: 'json',
 			cache: false,
 			success: function (data) {
-				var teams = data.pools.reduce((aggregate, pool) => aggregate.concat(pool.entries), []);
-
+				var that = this;
 				function node(team1, team2, game, pick) {
 					var winningTeamId = game ? (game.pool_entry_1_score > game.pool_entry_2_score ? game.pool_entry_1_id : game.pool_entry_2_id) : false;
 					return {
 						round: game.round,
 						pickedTeamId: pick ? pick.pool_entry_winner_id : false,
-						winningTeam: teams.find(team => team.id == winningTeamId),
+						winningTeam: that.teams.find(team => team.id == winningTeamId),
 						team1: team1,
 						team2: team2,
 						game: game,
-						pick: pick
+						pick: pick,
+						teamName: t => t ? '(' + t.rank + ') ' + t.name : ''
 					}
 				}
 
@@ -46,8 +48,8 @@ var BracketPick = React.createClass({
 						var game = data.games.find(g => g.prev_bracket_game_1_id == previousRound[x].game.id && g.prev_bracket_game_2_id == previousRound[x + 1].game.id);
 						var pick = data.picks.find(p => p.bracket_game_id == game.id);
 						round.push(node(
-							pick ? teams.find(team => team.id == pick.pool_entry_1_id) : false,
-							pick ? teams.find(team => team.id == pick.pool_entry_2_id) : false,
+							pick ? that.teams.find(team => team.id == pick.pool_entry_1_id) : false,
+							pick ? that.teams.find(team => team.id == pick.pool_entry_2_id) : false,
 							game,
 							pick
 						));
@@ -126,8 +128,7 @@ var BracketPick = React.createClass({
 				 * 		]
 				 * 	}
 				 */
-				// each node contains:
-					//
+				this.teams = data.pools.reduce((aggregate, pool) => aggregate.concat(pool.entries), []);
 				var conferences = {
 					topLeft: compileConference(data.pools.find(pool => pool.id == data.bracket.top_left_pool_id)),
 					bottomLeft: compileConference(data.pools.find(pool => pool.id == data.bracket.bottom_left_pool_id)),
@@ -148,8 +149,34 @@ var BracketPick = React.createClass({
 			}.bind(this)
 		});
 	},
-	pickChanged: function (pick) {
-		console.log('pick changed', pick);
+	pickChanged: function (ev, node) {
+		if (ev.target.value) {
+			node.pick = {
+				bracket_game_id: node.game.id,
+				pool_entry_1_id: node.team1 ? node.team1.id : false,
+				pool_entry_2_id: node.team2 ? node.team2.id : false,
+				pool_entry_winner_id: ev.target.value
+			};
+		} else {
+			node.pick = false;
+		}
+
+		// set team option in next game and if next game picked that team as the winner, clear winner of next game (recursive)
+
+		// node is pointer to data in state, so updating node will update state
+		this.setState(this.state);
+
+		// ajax save
+		$.ajax({
+			url: 'bracket/pick/' + node.game.id + '/' + (node.team1.id ? node.team1.id : '') + '/' + (node.team2.id ? node.team2.id : '') + '/' + (ev.target.value ? ev.target.value : -1),
+			dataType: 'json',
+			data: csrf(),
+			cache: false,
+			method: 'post',
+			success: function (data) {
+				console.log('change saved message to show that it is now all saved (have a "saving..." text somewhere akin to google drive?)', data)
+			}.bind(this)
+		});
 	},
 	render: function () {
 		if (this.state.bracket) {
@@ -244,19 +271,18 @@ var PickMenu = React.createClass({
 		pickChangedCallback: React.PropTypes.func.isRequired
 	},
 	pickChanged: function (ev) {
-		this.props.pickChangedCallback(this.props.gameId, ev.target.value);
+		this.props.pickChangedCallback(ev, this.props.node);
 	},
 	render: function () {
-// console.log(this.props.node);
 		var option1, option2;
 		if (this.props.node.team1) {
-			option1 = <option value={this.props.node.team1 ? this.props.node.team1.id : ''}>{this.props.node.team1 ? this.props.node.team1.name + ' (' + this.props.node.team1.rank + ')' : ''}</option>;
+			option1 = <option value={this.props.node.team1 ? this.props.node.team1.id : ''}>{this.props.node.teamName(this.props.node.team1)}</option>;
 		}
 		if (this.props.node.team2) {
-			option2 = <option value={this.props.node.team2 ? this.props.node.team2.id : ''}>{this.props.node.team2 ? this.props.node.team2.name + ' (' + this.props.node.team2.rank + ')' : ''}</option>;
+			option2 = <option value={this.props.node.team2 ? this.props.node.team2.id : ''}>{this.props.node.teamName(this.props.node.team2)}</option>;
 		}
 		return (
-			<select key={this.props.node.game.id} onChange={this.props.pickChangedCallback}>
+			<select key={this.props.node.game.id} onChange={this.pickChanged} value={this.props.node.pick ? this.props.node.pick.pool_entry_winner_id : false}>
 				<option value=""></option>
 				{option1 ? option1 : ''}
 				{option2 ? option2 : ''}

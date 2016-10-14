@@ -117,4 +117,21 @@ class BracketDao
 			WHERE id = ?
 		', [$bracketId]);
 	}
+
+	public static function deleteUserBracketGames($where) {
+		return DB::table('user_x_bracket_games')->where($where)->delete();
+	}
+
+	public static function insertUserBracketGame($userId, $gameId, $team1Id, $team2Id, $winningTeamId) {
+		$game = [
+			'user_id' => $userId,
+			'bracket_game_id' => $gameId,
+			'pool_entry_winner_id' => $winningTeamId,
+			'pool_entry_1_id' => $team1Id,
+			'pool_entry_2_id' => $team2Id,
+		];
+		$game['id'] = DB::table('user_x_bracket_games')->insertGetId($game);
+		return $game;
+
+	}
 }

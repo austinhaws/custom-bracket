@@ -348,7 +348,7 @@ input, .listRow {
 	height: 400px;
 	width: 100px;
 }
-#bracket-form .conference .roundList.entries {
+#bracket-form .conference .roundList.entries, .roundList select {
 	font-size: 10px;
 }
 .conference {
