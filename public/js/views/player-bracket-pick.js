@@ -135,14 +135,10 @@ var BracketPick = React.createClass({
 					bottomRight: compileConference(data.pools.find(pool => pool.id == data.bracket.bottom_right_pool_id)),
 				};
 				conferences.finals = {
-					round5: [
-						fillNextRound(conferences.topLeft.round4.concat(conferences.bottomLeft.round4)),
-						fillNextRound(conferences.topRight.round4.concat(conferences.bottomRight.round4))
-					]
+					round5: fillNextRound(conferences.topLeft.round4.concat(conferences.bottomLeft.round4)).concat(
+							fillNextRound(conferences.topRight.round4.concat(conferences.bottomRight.round4)))
 				};
-				conferences.finals.round6 = [
-					fillNextRound(conferences.finals.round5[0].concat(conferences.finals.round5[1]))
-				];
+				conferences.finals.round6 = fillNextRound(conferences.finals.round5);
 // console.log(conferences);
 // console.log(data);
 				this.setState({
@@ -165,17 +161,39 @@ var BracketPick = React.createClass({
 			};
 		}
 		return this.state.data ? (
-			<div className="container">
+			<div className="bracket-container">
 				<div className="row">
-					<div className="col-md-10 col-md-offset-1">
+					<div className="bracketMainContainer">
 						<div className="panel panel-default">
 							<div className="panel-heading h3">
 								Make Your Picks
 							</div>
-							<div className="panel-body">
+							<div className="panel-body conferencesContainer">
 								<div className="conferencesColumn">
-									<ConferencePick conference={this.state.conferences.topLeft} pickChangedCallback={this.pickChanged}/>
-									<ConferencePick conference={this.state.conferences.bottomLeft} pickChangedCallback={this.pickChanged}/>
+									<ConferencePick conference={this.state.conferences.topLeft} pickChangedCallback={this.pickChanged} leftToRight={true}/>
+									<ConferencePick conference={this.state.conferences.bottomLeft} pickChangedCallback={this.pickChanged} leftToRight={true}/>
+								</div>
+								<div className="conferencesColumn middleColumn">
+									<div className="conference">
+										<div className="roundList">
+											<div className="middlePickMenu">
+												Left Winner
+												<PickMenu key={this.state.conferences.finals.round5[0].game.id} node={this.state.conferences.finals.round5[0]} pickChangedCallback={this.pickChanged}/>
+											</div>
+											<div className="middlePickMenu">
+												<div className="pickMenuLabel">Pangalactic Champion</div>
+												<PickMenu key={this.state.conferences.finals.round6[0].game.id} node={this.state.conferences.finals.round6[0]} pickChangedCallback={this.pickChanged}/>
+											</div>
+											<div className="middlePickMenu">
+												<div className="pickMenuLabel">Right Champion</div>
+												<PickMenu key={this.state.conferences.finals.round5[1].game.id} node={this.state.conferences.finals.round5[1]} pickChangedCallback={this.pickChanged}/>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div className="conferencesColumn">
+									<ConferencePick conference={this.state.conferences.topRight} pickChangedCallback={this.pickChanged} leftToRight={false}/>
+									<ConferencePick conference={this.state.conferences.bottomRight} pickChangedCallback={this.pickChanged} leftToRight={false}/>
 								</div>
 							</div>
 						</div>
@@ -207,7 +225,7 @@ var ConferencePick = React.createClass({
 		var round4List = this.props.conference.round4.map(node => <PickMenu key={node.game.id} node={node} pickChangedCallback={that.props.pickChangedCallback}/>);
 		// show each round up to the conference  champ
 		return (
-			<div className="conference leftToRight">
+			<div className={"conference " + (this.props.leftToRight ? 'leftToRight' : 'rightToLeft')}>
 				<div key="title" className="conferenceTitle">{this.props.conference.conference.name}</div>
 				<div key="round0" className="roundList entries">{round0List}</div>
 				<div key="round1" className="roundList">{round1List}</div>
@@ -230,11 +248,18 @@ var PickMenu = React.createClass({
 	},
 	render: function () {
 // console.log(this.props.node);
+		var option1, option2;
+		if (this.props.node.team1) {
+			option1 = <option value={this.props.node.team1 ? this.props.node.team1.id : ''}>{this.props.node.team1 ? this.props.node.team1.name + ' (' + this.props.node.team1.rank + ')' : ''}</option>;
+		}
+		if (this.props.node.team2) {
+			option2 = <option value={this.props.node.team2 ? this.props.node.team2.id : ''}>{this.props.node.team2 ? this.props.node.team2.name + ' (' + this.props.node.team2.rank + ')' : ''}</option>;
+		}
 		return (
 			<select key={this.props.node.game.id} onChange={this.props.pickChangedCallback}>
 				<option value=""></option>
-				<option value={this.props.node.team1 ? this.props.node.team1.id : ''}>{this.props.node.team1 ? this.props.node.team1.name + ' (' + this.props.node.team1.rank + ')' : ''}</option>
-				<option value={this.props.node.team2 ? this.props.node.team2.id : ''}>{this.props.node.team2 ? this.props.node.team2.name + ' (' + this.props.node.team2.rank + ')' : ''}</option>
+				{option1 ? option1 : ''}
+				{option2 ? option2 : ''}
 			</select>
 		);
 	}

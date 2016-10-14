@@ -346,15 +346,39 @@ input, .listRow {
 	flex-direction: column;
 	justify-content: space-around;
 	height: 400px;
-	float: left;
 	width: 100px;
 }
 #bracket-form .conference .roundList.entries {
 	font-size: 10px;
 }
-.conferencesColumn {
-	float: left;
+.conference {
+	display: flex;
 	width: 500px;
+}
+.conferencesContainer {
+	display: flex;
+	flex-direction: row;
+}
+.bracketMainContainer {
+	width: 1230px;
+	margin: 0 auto;
+}
+.conferencesColumn {
+	width: 500px;
+}
+.conferencesColumn.middleColumn {
+	width: 200px;
+}
+.middlePickMenu select {
+	width: 100px;
+}
+.conferencesColumn.middleColumn .roundList {
+	margin: 0 auto;
+	justify-content: space-around;
+	height: 800px !important;
+}
+.conferencesColumn.middleColumn .conference {
+	width: 200px;
 }
 .roundList .entry:nth-child(2n) {
 	border-bottom: 1px solid #eee;
@@ -362,4 +386,10 @@ input, .listRow {
 }
 .roundList .entry:last-child {
 	border-bottom: none;
+}
+.rightToLeft {
+	flex-direction: row-reverse;
+}
+.conference {
+	margin-bottom: 50px;
 }
