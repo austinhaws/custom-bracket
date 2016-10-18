@@ -212,7 +212,7 @@ var BracketPick = React.createClass({
 												<PickMenu key={this.state.conferences.finals.round6[0].game.id} node={this.state.conferences.finals.round6[0]} pickChangedCallback={this.pickChanged}/>
 											</div>
 											<div className="middlePickMenu">
-												<div className="pickMenuLabel">Right Champion</div>
+												<div className="pickMenuLabel">Right Winner</div>
 												<PickMenu key={this.state.conferences.finals.round5[1].game.id} node={this.state.conferences.finals.round5[1]} pickChangedCallback={this.pickChanged}/>
 											</div>
 										</div>
