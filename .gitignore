@@ -17,3 +17,4 @@ public/js/.DS_Store
 public/js/vendor/.DS_Store
 public/js/vendor/babel/.DS_Store
 resources/views/.DS_Store
+/.idea/dataSources.xml
