@@ -8,6 +8,9 @@ var BracketPick = React.createClass({
 	// list of all teams in the bracket
 	teams: false,
 	componentDidMount: function () {
+		this.loadData();
+	},
+	loadData: function () {
 		// ajax data
 		$.ajax({
 			url: 'bracket',
@@ -32,8 +35,8 @@ var BracketPick = React.createClass({
 				function firstRoundNode(rank1, rank2, poolWithEntries) {
 					var team1 = poolWithEntries.entries.find(entry => entry.rank == rank1);
 					var team2 = poolWithEntries.entries.find(entry => entry.rank == rank2);
-					var game = data.games.find(g => g.pool_entry_1_id == team1.id && g.pool_entry_2_id == team2.id && g.round == 1);
-					var pick = data.picks.find(p => p.bracket_game_id == game.id);
+					var game = that.games.find(g => g.pool_entry_1_id == team1.id && g.pool_entry_2_id == team2.id && g.round == 1);
+					var pick = that.picks.find(p => p.bracket_game_id == game.id);
 					return node(
 						team1,
 						team2,
@@ -45,8 +48,21 @@ var BracketPick = React.createClass({
 				function fillNextRound(previousRound) {
 					var round = [];
 					for (var x = 0; x < previousRound.length; x += 2) {
-						var game = data.games.find(g => g.prev_bracket_game_1_id == previousRound[x].game.id && g.prev_bracket_game_2_id == previousRound[x + 1].game.id);
-						var pick = data.picks.find(p => p.bracket_game_id == game.id);
+						var game = that.games.find(g => g.prev_bracket_game_1_id == previousRound[x].game.id && g.prev_bracket_game_2_id == previousRound[x + 1].game.id);
+						var pick = that.picks.find(p => p.bracket_game_id == game.id);
+						if (!pick) {
+							// see if previous game's pick had winner team
+							var prev1Pick = that.picks.find(p => p.bracket_game_id == previousRound[x].game.id);
+							var prev2Pick = that.picks.find(p => p.bracket_game_id == previousRound[x + 1].game.id);
+							if (prev1Pick || prev2Pick) {
+								pick = {
+									bracket_game_id: game.id,
+									id: false,
+									pool_entry_1_id: prev1Pick ? prev1Pick.pool_entry_winner_id : false,
+									pool_entry_2_id: prev2Pick ? prev2Pick.pool_entry_winner_id : false
+								};
+							}
+						}
 						round.push(node(
 							pick ? that.teams.find(team => team.id == pick.pool_entry_1_id) : false,
 							pick ? that.teams.find(team => team.id == pick.pool_entry_2_id) : false,
@@ -129,6 +145,9 @@ var BracketPick = React.createClass({
 				 * 	}
 				 */
 				this.teams = data.pools.reduce((aggregate, pool) => aggregate.concat(pool.entries), []);
+				this.games = data.games;
+				this.picks = data.picks;
+
 				var conferences = {
 					topLeft: compileConference(data.pools.find(pool => pool.id == data.bracket.top_left_pool_id)),
 					bottomLeft: compileConference(data.pools.find(pool => pool.id == data.bracket.bottom_left_pool_id)),
@@ -161,26 +180,25 @@ var BracketPick = React.createClass({
 			node.pick = false;
 		}
 
-		// set team option in next game and if next game picked that team as the winner, clear winner of next game (recursive)
-
 		// node is pointer to data in state, so updating node will update state
 		this.setState(this.state);
-
 		// ajax save
 		$.ajax({
-			url: 'bracket/pick/' + node.game.id + '/' + (node.team1.id ? node.team1.id : '') + '/' + (node.team2.id ? node.team2.id : '') + '/' + (ev.target.value ? ev.target.value : -1),
+			url: 'bracket/pick/' + node.game.id + '/' + ((node.team1 && node.team1.id) ? node.team1.id : '0') + '/' + ((node.team2 && node.team2.id) ? node.team2.id : '0') + '/' + (ev.target.value ? ev.target.value : -1),
 			dataType: 'json',
 			data: csrf(),
 			cache: false,
 			method: 'post',
 			success: function (data) {
+				this.loadData();
 				console.log('change saved message to show that it is now all saved (have a "saving..." text somewhere akin to google drive?)', data)
 			}.bind(this)
 		});
 	},
 	render: function () {
+		var pools = {};
 		if (this.state.bracket) {
-			var pools = {
+			pools = {
 				topLeft: this.state.pools.find(p => p.id == this.state.bracket.top_left_pool_id),
 				bottomLeft: this.state.pools.find(p => p.id == this.state.bracket.bottom_left_pool_id),
 				topRight: this.state.pools.find(p => p.id == this.state.bracket.top_right_pool_id),
@@ -189,7 +207,7 @@ var BracketPick = React.createClass({
 		}
 		return this.state.data ? (
 			<div className="bracket-container">
-				<div className="row">
+				<div>
 					<div className="bracketMainContainer">
 						<div className="panel panel-default">
 							<div className="panel-heading h3">
@@ -282,7 +300,7 @@ var PickMenu = React.createClass({
 			option2 = <option value={this.props.node.team2 ? this.props.node.team2.id : ''}>{this.props.node.teamName(this.props.node.team2)}</option>;
 		}
 		return (
-			<select key={this.props.node.game.id} onChange={this.pickChanged} value={this.props.node.pick ? this.props.node.pick.pool_entry_winner_id : false}>
+			<select key={this.props.node.game.id} onChange={this.pickChanged} value={(this.props.node.pick && this.props.node.pick.pool_entry_winner_id) ? this.props.node.pick.pool_entry_winner_id : false}>
 				<option value=""></option>
 				{option1 ? option1 : ''}
 				{option2 ? option2 : ''}

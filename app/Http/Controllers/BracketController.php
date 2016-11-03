@@ -625,16 +625,64 @@ class BracketController extends Controller
 	}
 
 	public function bracketPickSave($gameId, $team1Id, $team2Id, $winningTeamId) {
+		function fixNextGame($previousGameId, $chosenTeamId, $userId, $previousWinningGameId) {
+			// get the next game and determine if from the 1st game or the 2nd game
+			$fromOne = true;
+			$game = BracketDao::selectBracketGame(['prev_bracket_game_1_id' => $previousGameId]);
+			if (!$game) {
+				$game = BracketDao::selectBracketGame(['prev_bracket_game_2_id' => $previousGameId]);
+				$fromOne = false;
+			}
+
+			// if game found, update it with new previous team (if not found then don't do anything)
+			if ($game) {
+				$game = $game[0];
+				// find pick for this game; create if missing
+				$pick = BracketDao::selectUserBracketGames(['user_id' => $userId, 'bracket_game_id' => $game->id]);
+				if ($pick) {
+					$pick = $pick[0];
+					// - set its team1 OR team2 to this' winningid
+					if ($fromOne) {
+						$pick->pool_entry_1_id = $chosenTeamId;
+					} else {
+						$pick->pool_entry_2_id = $chosenTeamId;
+					}
+					// - if its winningid is the new picked winner, update to picked team and recurse
+					if ($previousWinningGameId && $pick->pool_entry_winner_id == $previousWinningGameId) {
+						// - set to new team winner
+						$pick->pool_entry_winner_id = $chosenTeamId;
+
+						// - recurse
+						fixNextGame($pick->bracket_game_id, $chosenTeamId, $userId, $previousWinningGameId);
+					}
+					BracketDao::saveUserBracketGame((array) $pick);
+
+				} else {
+					// game not found so enter a new record
+					BracketDao::insertUserBracketGame($userId, $game->id, $fromOne ? $chosenTeamId : null, $fromOne ? null : $chosenTeamId, null);
+				}
+			}
+		}
+
 		$userId = Auth::user()->id;
 
-		// delete entry for this team in database
-		BracketDao::deleteUserBracketGames(['user_id' => $userId, 'bracket_game_id' => $gameId]);
-
-		// if teamId != -1 then insert new entry
-		$game = false;
-		if ($winningTeamId >= 0) {
-			$game = BracketDao::insertUserBracketGame($userId, $gameId, $team1Id, $team2Id, $winningTeamId);
+		// just delete and re-add
+		$game = BracketDao::selectUserBracketGames(['user_id' => $userId, 'bracket_game_id' => $gameId]);
+		$previousWinningGameId = false;
+		if ($game) {
+			$game = $game[0];
+			$previousWinningGameId = $game->pool_entry_winner_id;
 		}
-		echo json_encode($game ? $game : ['result' => 'game deleted']);
+		if (!$team1Id) {
+			$team1Id = 0;
+		}
+		if (!$team2Id) {
+			$team2Id = 0;
+		}
+		BracketDao::deleteUserBracketGames(['bracket_game_id' => $gameId, 'user_id' => $userId]);
+		BracketDao::insertUserBracketGame($userId, $gameId, $team1Id, $team2Id, $winningTeamId);
+		fixNextGame($gameId, $winningTeamId, $userId, $previousWinningGameId);
+
+		echo json_encode(['result' => 'game saved']);
 	}
 }
