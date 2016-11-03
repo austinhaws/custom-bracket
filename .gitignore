@@ -4,3 +4,16 @@
 Homestead.yaml
 Homestead.json
 .env
+/.idea/
+.DS_Store
+.idea/dataSources.local.xml
+.idea/dataSources/
+.idea/workspace.xml
+database/.DS_Store
+database/migrations/.DS_Store
+public/.DS_Store
+public/img/.DS_Store
+public/js/.DS_Store
+public/js/vendor/.DS_Store
+public/js/vendor/babel/.DS_Store
+resources/views/.DS_Store
