@@ -28,7 +28,8 @@
     <script>
         var globals = {
             csrfName: '_token',
-            csrf: '{{ csrf_token() }}'
+            csrf: '{{ csrf_token() }}',
+            constants: {}
         };
     </script>
 

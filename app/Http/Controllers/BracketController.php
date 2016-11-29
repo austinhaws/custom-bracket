@@ -685,4 +685,87 @@ class BracketController extends Controller
 
 		echo json_encode(['result' => 'game saved']);
 	}
+
+	public function enterScores() {
+		function compilePool($pool, $games) {
+			$result = [
+				'pool' => $pool,
+				'teams' => PoolDao::selectTeamsListForPool($pool->id),
+			];
+
+			// separate in to rounds
+			$result['games'] = [1 => [], 2 => [], 3 => [], 4 => []];
+			foreach ($games as $game) {
+				if ($game->pool_id == $pool->id) {
+					$result['games'][$game->round][] = $game;
+				}
+			}
+
+			return $result;
+		}
+
+		function compileFinals($games) {
+			$result['games'] = [5 => [], 6 => []];
+			foreach ($games as $game) {
+				if ($game->round >= 5) {
+					$result['games'][$game->round][] = $game;
+				}
+			}
+			return $result;
+		}
+
+		// get the bracket
+		$bracket = BracketDao::selectBrackets([])[0];
+
+		// get pools for the four conferences
+		$pools = PoolDao::selectPools(false);
+		$games = BracketDao::selectBracketGames($bracket->id, false);
+
+		$output = ['bracket' => $bracket];
+		foreach ($pools as $pool) {
+			$output[$pool->id] = compilePool($pool, $games);
+		}
+
+		$output['finals'] = compileFinals($games);
+
+		// load the page passing it the bracket id, it will ajax for the rest of the data
+		return view('enter-game-scores', ['data' => json_encode($output)]);
+	}
+
+	function saveGameScore(Request $request) {
+		$gameId = $request->input('gameId');
+		$score = $request->input('score');
+		$teamId = $request->input('teamId');
+		BracketDao::updateBracketGame(['pool_entry_1_score' => $score], ['id' => $gameId, 'pool_entry_1_id' => $teamId]);
+		BracketDao::updateBracketGame(['pool_entry_2_score' => $score], ['id' => $gameId, 'pool_entry_2_id' => $teamId]);
+
+		// select the game, and send back
+		$game = BracketDao::selectBracketGame(['id' => $gameId])[0];
+		if ($game->pool_entry_1_score && $game->pool_entry_2_score) {
+			// this doesn't handle chaining of score entries, and assumes that you don't go back and change scores once set
+			if ($game->pool_entry_1_score > $game->pool_entry_2_score) {
+				// tell the next game entry 1 won
+				BracketDao::updateBracketGame(['pool_entry_1_id' => $game->pool_entry_1_id], ['prev_bracket_game_1_id' => $game->id]);
+				BracketDao::updateBracketGame(['pool_entry_2_id' => $game->pool_entry_1_id], ['prev_bracket_game_2_id' => $game->id]);
+			} else {
+				// tell the next game entry 2 won
+				BracketDao::updateBracketGame(['pool_entry_1_id' => $game->pool_entry_2_id], ['prev_bracket_game_1_id' => $game->id]);
+				BracketDao::updateBracketGame(['pool_entry_2_id' => $game->pool_entry_2_id], ['prev_bracket_game_2_id' => $game->id]);
+			}
+		}
+
+		$games = [$game];
+
+		$newGame = BracketDao::selectBracketGame(['prev_bracket_game_1_id' => $game->id]);
+		if (count($newGame)) {
+			$games[] = $newGame[0];
+		}
+
+		$newGame = BracketDao::selectBracketGame(['prev_bracket_game_2_id' => $game->id]);
+		if (count($newGame)) {
+			$games[] = $newGame[0];
+		}
+
+		return json_encode($games);
+	}
 }

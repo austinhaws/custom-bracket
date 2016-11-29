@@ -71,12 +71,15 @@ Route::post('/admin/pool/save', 'PoolController@poolSave');
 Route::post('/admin/pool/savePools', 'PoolController@savePools');
 Route::get('/admin/pool/{id}', 'PoolController@poolEdit');
 Route::post('/admin/pool/load/{id}', 'PoolController@ajaxLoad');
+Route::get('/admin/enterScores', 'BracketController@enterScores');
 
 Route::get('/admin/bracket/add', 'BracketController@bracketAdd');
 Route::post('/admin/bracket/save', 'BracketController@bracketSave');
 Route::get('/admin/bracket/{id}', 'BracketController@bracketEdit');
 Route::get('/admin/bracket/score/{id}/{round}', 'BracketController@bracketScore');
 Route::post('/admin/bracket/score/save', 'BracketController@bracketScoreSave');
+
+Route::post('/admin/game/setScore', 'BracketController@saveGameScore');
 
 // RESTful
 // Pool

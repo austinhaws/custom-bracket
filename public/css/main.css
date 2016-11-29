@@ -345,7 +345,7 @@ input, .listRow {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-around;
-	height: 400px;
+	height: 500px;
 	width: 100px;
 }
 #bracket-form .conference .roundList.entries, .roundList select {

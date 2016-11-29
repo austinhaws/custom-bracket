@@ -120,6 +120,9 @@ var BracketBox = React.createClass({
 	},
 	buttonPressed: function (event) {
 		switch (event.target.dataset.button) {
+			case 'scores':
+				window.location = 'admin/enterScores';
+				break;
 			case 'cancelDates':
 				this.componentDidMount('bracket');
 				break;
@@ -219,6 +222,9 @@ var BracketBox = React.createClass({
 					<tfoot>
 						<tr><td colSpan="100">
 							<SaveCancelButtons saveState={this.state.bracketSaveState} dataButtonSuffix="Dates" buttonPressedCallback={this.buttonPressed}/>
+						</td></tr>
+						<tr><td colSpan="100">
+							<button id="enter-scores-button" className="btn btn-primary" data-button="scores" onClick={this.buttonPressed}>Enter Scores</button>
 						</td></tr>
 					</tfoot>
 				</table>
