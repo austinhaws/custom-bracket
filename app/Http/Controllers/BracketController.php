@@ -728,6 +728,13 @@ class BracketController extends Controller
 
 		$output['finals'] = compileFinals($gamesById);
 		$output['games'] = $gamesById;
+		$rolls = BracketDao::rankRollsForBracketId($bracket->id);
+		$rollsByRank = [];
+		foreach ($rolls as $roll) {
+			$rollsByRank[$roll->rank] = $roll->roll;
+		}
+
+		$output['rolls'] = $rollsByRank;
 
 		// load the page passing it the bracket id, it will ajax for the rest of the data
 		return view('enter-game-scores', ['data' => json_encode($output)]);

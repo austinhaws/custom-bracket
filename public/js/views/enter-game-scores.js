@@ -130,7 +130,7 @@ var ScoreInput = React.createClass({
 	render: function () {
 		return (
 			<div className="scoreInput">
-				{this.props.team.name} ({this.props.team.rank}) : <input type="text" onChange={e => this.props.setScore(this.props.game.id, this.props.team.id, e.target.value)} value={this.props.score === null ? '' : this.props.score}/><br/>
+				{this.props.team.name} (<span className="rank">{this.props.team.rank}</span> <span className="roll">{this.props.state.rolls[this.props.team.rank]}</span>) : <input type="text" onChange={e => this.props.setScore(this.props.game.id, this.props.team.id, e.target.value)} value={this.props.score === null ? '' : this.props.score}/><br/>
 			</div>
 		)
 	}
