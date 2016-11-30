@@ -2,10 +2,40 @@
 
 // the form for entering name/dates for a bracket
 var Scores = React.createClass({
+	propTypes: {
+		// redux
+		state: React.PropTypes.object.isRequired,
+		resetData: React.PropTypes.func.isRequired,
+		setSaveState: React.PropTypes.func.isRequired
+	},
+	saveButtonPressed: function (e) {
+		switch (e.target.dataset.button) {
+			case 'cancel':
+				this.props.resetData();
+				break;
+			case 'save':
+				this.props.setSaveState(SaveButtonStates.saving);
+				$.ajax({
+					url: 'admin/game/setGameScores',
+					method: 'post',
+					data: csrf({games: this.props.state.games}),
+					dataType: 'json',
+					cache: false,
+					success: () => {
+						this.props.setSaveState(SaveButtonStates.saved);
+					}
+				});
+				break;
+			default:
+				console.error('Unknown button type:' + event.target.dataset.button);
+				break;
+		}
+	},
 	render: function() {
 		const rounds = ['First Round', 'Second Round', 'Sweet 16', 'Elite 8', 'Final 4', 'Championship'];
 		return (
 			<div id="roundsContainer">
+				<SaveCancelButtons saveState={this.props.state.saveState} buttonPressedCallback={this.saveButtonPressed}/>
 				{rounds.map((r, i) =>
 					<ConnectedRound key={i} roundNumber={i + 1} roundTitle={r}/>
 				)}
@@ -51,7 +81,7 @@ var Round = React.createClass({
 		return (
 			<div className="roundContainer">
 				<div className="roundTitle">{this.props.roundTitle}</div>
-				{games.map((g, i) => <ConnectedScoreDetail key={i} game={g}/>)}
+				{games.map((gid, i) => <ConnectedScoreDetail key={i} gameId={gid}/>)}
 			</div>
 		);
 	}
@@ -63,22 +93,22 @@ var ScoreDetail = React.createClass({
 		state: React.PropTypes.object.isRequired,
 
 		// parent
-		game: React.PropTypes.object.isRequired
+		gameId: React.PropTypes.number.isRequired
 	},
 	render: function () {
-		var that = this;
-		const team1 = this.props.state.teams.filter(t => t.id == that.props.game.pool_entry_1_id)[0];
-		const team2 = this.props.state.teams.filter(t => t.id == that.props.game.pool_entry_2_id)[0];
-
+		const game = this.props.state.games[this.props.gameId];
+		const team1 = this.props.state.teams[game.pool_entry_1_id];
+		const team2 = this.props.state.teams[game.pool_entry_2_id];
 		var detail;
 		if (team1 && team2) {
 			detail = (
 				<div className="scoreDetail">
-					<ConnectedScoreInput key="1" game={this.props.game} team={team1} score={this.props.game.pool_entry_1_score}/>
-					<ConnectedScoreInput key="2" game={this.props.game} team={team2} score={this.props.game.pool_entry_2_score}/>
+					<ConnectedScoreInput key="1" game={game} team={team1} score={game.pool_entry_1_score}/>
+					<ConnectedScoreInput key="2" game={game} team={team2} score={game.pool_entry_2_score}/>
 				</div>
 			);
 		} else {
+console.log('not yet', game);
 			detail = <div className="scoreDetail">Teams not yet decided</div>;
 		}
 
@@ -108,6 +138,14 @@ var ScoreInput = React.createClass({
 
 // ==== Redux Connectors ==== //
 
+const ConnectedScores = ReactRedux.connect(
+	(state) => {return {state: state} },
+	(dispatch) => { return {
+		resetData: () => dispatch({type: globals.constants.ACTION_TYPES.RESET_DATA}),
+		setSaveState: (saveState) => dispatch({type: globals.constants.ACTION_TYPES.SET_SAVE_STATE, payload: saveState})
+	} }
+)(Scores);
+
 const ConnectedRound = ReactRedux.connect(
 	// map state to properties - put properties into the component
 	(state) => { return {state: state} },
@@ -130,37 +168,29 @@ const ConnectedScoreInput = ReactRedux.connect(
 
 	// dispatchers as props for component
 	(dispatch) => { return {
-		setScore: (gameId, teamId, score) => {
-console.log('setting score', gameId, teamId, score);
-			const action = {type: globals.constants.ACTION_TYPES.SET_SCORE, payload: {gameId: gameId, score: parseInt(score, 10), teamId: teamId}};
-
-			// redux
-			dispatch(action);
-
-			// server
-			$.ajax({
-				url: 'admin/game/setScore',
-				method: 'post',
-				data: csrf(action.payload),
-				dataType: 'json',
-				cache: false
-			});
-			console.error('ajax to the server the score change');
-		}
+		setScore: (gameId, teamId, score) => dispatch({type: globals.constants.ACTION_TYPES.SET_SCORE, payload: {gameId: gameId, score: score ? parseInt(score, 10) : '', teamId: teamId}})
 	}}
 )(ScoreInput);
 
 
 // ==== setup Redux store ==== //
 
-// for ease of use, combine teams in to one list
+// for ease of use, combine teams in to one list (with id idx)
 globals.data.teams = globals.data[globals.data.bracket.top_left_pool_id].teams
 	.concat(globals.data[globals.data.bracket.bottom_left_pool_id].teams)
 	.concat(globals.data[globals.data.bracket.top_right_pool_id].teams)
-	.concat(globals.data[globals.data.bracket.bottom_right_pool_id].teams);
-
-globals.constants.ACTION_TYPES = {SET_SCORE: 'SET_SCORE'};
-
+	.concat(globals.data[globals.data.bracket.bottom_right_pool_id].teams)
+	.reduce((teams, team) => {
+		teams[team.id] = team;
+		return teams;
+	}, []);
+globals.data.saveState = SaveButtonStates.noChanges;
+globals.constants.ACTION_TYPES = {
+	SET_SCORE: 'SET_SCORE',
+	RESET_DATA: 'RESET_DATA',
+	SET_SAVE_STATE: 'SET_SAVE_STATE'
+};
+globals.originalData = JSON.parse(JSON.stringify(globals.data));
 
 /*
 	action = {
@@ -177,21 +207,49 @@ const reduce = (state, action) => {
 	reducers[globals.constants.ACTION_TYPES.SET_SCORE] = (state, action) => {
 		let newState = Object.assign({}, state);
 
-		// if the game is the one wanted, update its score
-		const updateGame = g => {
-			if (g.id == action.payload.gameId) {
-				if (action.payload.teamId == g.pool_entry_1_id) {
-					g.pool_entry_1_score = action.payload.score;
-				} else {
-					g.pool_entry_2_score = action.payload.score;
+		// update game
+		let game = state.games[action.payload.gameId];
+		if (action.payload.teamId == game.pool_entry_1_id) {
+			game.pool_entry_1_score = action.payload.score;
+		} else {
+			game.pool_entry_2_score = action.payload.score;
+		}
+
+		// update dependent games
+		(function supplyDependentTeams(game) {
+			if (game.pool_entry_1_score && game.pool_entry_2_score) {
+				let winner_entry_id = game.pool_entry_1_score > game.pool_entry_2_score ? game.pool_entry_1_id : game.pool_entry_2_id;
+				if (winner_entry_id) {
+					const games = Object.values(newState.games);
+					let prevGame1 = games.filter(g => g.prev_bracket_game_1_id == game.id);
+					let prevGame2 = games.filter(g => g.prev_bracket_game_2_id == game.id);
+					if (prevGame1.length) {
+						prevGame1[0].pool_entry_1_id = winner_entry_id;
+						prevGame1[0].pool_entry_1_rank = newState.teams[winner_entry_id].rank;
+						supplyDependentTeams(prevGame1[0]);
+					}
+					if (prevGame2.length) {
+						prevGame2[0].pool_entry_2_id = winner_entry_id;
+						supplyDependentTeams(prevGame2[0]);
+					}
 				}
 			}
-		};
+		})(game);
 
-		// games are hidden throughout state (probably would've been cleaner to have a gmaes list and ids of games in the locations)
-		const keys = [newState.bracket.bottom_left_pool_id, newState.bracket.top_left_pool_id, newState.bracket.bottom_right_pool_id, newState.bracket.top_right_pool_id, 'finals'];
-		keys.forEach(k => Object.keys(newState[k].games).forEach(roundKey => newState[k].games[roundKey].forEach(game => updateGame(game))));
+		newState.saveState = SaveButtonStates.save;
 
+		return newState;
+	};
+
+	// reducer: reset data
+	reducers[globals.constants.ACTION_TYPES.RESET_DATA] = (state, action) => {
+		return JSON.parse(JSON.stringify(globals.originalData));
+	};
+
+	// recucer: save state
+	reducers[globals.constants.ACTION_TYPES.SET_SAVE_STATE] = (state, action) => {
+		let newState = Object.assign({}, state);
+		newState.saveState = action.payload;
 		return newState;
 	};
 
@@ -207,4 +265,4 @@ const reduce = (state, action) => {
 	return func ? func(state, action) : state;
 };
 
-ReactDOM.render(<ReactRedux.Provider store={Redux.createStore(reduce, globals.data)}><Scores/></ReactRedux.Provider>, document.getElementById('scores'));
+ReactDOM.render(<ReactRedux.Provider store={Redux.createStore(reduce, globals.data)}><ConnectedScores/></ReactRedux.Provider>, document.getElementById('scores'));

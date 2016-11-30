@@ -21,6 +21,7 @@
 
     <script src="js/vendor/redux.js"></script>
     <script src="js/vendor/react-redux.min.js"></script>
+    <script type="text/babel" src="js/components/saveButton.js"></script>
     <script type="text/babel" src="js/views/enter-game-scores.js"></script>
 
 @endsection

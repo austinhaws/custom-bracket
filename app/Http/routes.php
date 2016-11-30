@@ -80,6 +80,7 @@ Route::get('/admin/bracket/score/{id}/{round}', 'BracketController@bracketScore'
 Route::post('/admin/bracket/score/save', 'BracketController@bracketScoreSave');
 
 Route::post('/admin/game/setScore', 'BracketController@saveGameScore');
+Route::post('/admin/game/setGameScores', 'BracketController@saveGameScores');
 
 // RESTful
 // Pool

@@ -697,7 +697,7 @@ class BracketController extends Controller
 			$result['games'] = [1 => [], 2 => [], 3 => [], 4 => []];
 			foreach ($games as $game) {
 				if ($game->pool_id == $pool->id) {
-					$result['games'][$game->round][] = $game;
+					$result['games'][$game->round][] = $game->id;
 				}
 			}
 
@@ -708,7 +708,7 @@ class BracketController extends Controller
 			$result['games'] = [5 => [], 6 => []];
 			foreach ($games as $game) {
 				if ($game->round >= 5) {
-					$result['games'][$game->round][] = $game;
+					$result['games'][$game->round][] = $game->id;
 				}
 			}
 			return $result;
@@ -719,17 +719,47 @@ class BracketController extends Controller
 
 		// get pools for the four conferences
 		$pools = PoolDao::selectPools(false);
-		$games = BracketDao::selectBracketGames($bracket->id, false);
+		$gamesById = $this->bracketGamesById($bracket->id);
 
 		$output = ['bracket' => $bracket];
 		foreach ($pools as $pool) {
-			$output[$pool->id] = compilePool($pool, $games);
+			$output[$pool->id] = compilePool($pool, $gamesById);
 		}
 
-		$output['finals'] = compileFinals($games);
+		$output['finals'] = compileFinals($gamesById);
+		$output['games'] = $gamesById;
 
 		// load the page passing it the bracket id, it will ajax for the rest of the data
 		return view('enter-game-scores', ['data' => json_encode($output)]);
+	}
+
+	// get a brackets games and convert to key/value of gameid => game
+	private function bracketGamesById($bracketId) {
+		$games = BracketDao::selectBracketGames($bracketId, false);
+		$gamesById = [];
+		foreach ($games as $game) {
+			$gamesById[$game->id] = $game;
+		}
+		return $gamesById;
+	}
+
+	function saveGameScores(Request $request) {
+		// client side is in charge of pushing changes through dependent games and will send all games here; man this screams MONGO games container
+		$games = $request->input('games');
+		foreach ($games as $game) {
+			BracketDao::updateBracketGame([
+					'pool_entry_1_id' => $game['pool_entry_1_id'],
+					'pool_entry_1_rank' => $game['pool_entry_1_rank'],
+					'pool_entry_1_score' => $game['pool_entry_1_score'],
+					'pool_entry_2_id' => $game['pool_entry_2_id'],
+					'pool_entry_2_rank' => $game['pool_entry_2_rank'],
+					'pool_entry_2_score' => $game['pool_entry_2_score']
+				],
+				['id' => $game['id']]
+			);
+		}
+
+		return json_encode(['success' => 'success']);
 	}
 
 	function saveGameScore(Request $request) {
