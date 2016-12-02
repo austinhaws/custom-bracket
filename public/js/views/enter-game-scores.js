@@ -34,11 +34,13 @@ var Scores = React.createClass({
 	render: function() {
 		const rounds = ['First Round', 'Second Round', 'Sweet 16', 'Elite 8', 'Final 4', 'Championship'];
 		return (
-			<div id="roundsContainer">
+			<div className="masterContainer">
 				<SaveCancelButtons saveState={this.props.state.saveState} buttonPressedCallback={this.saveButtonPressed}/>
-				{rounds.map((r, i) =>
-					<ConnectedRound key={i} roundNumber={i + 1} roundTitle={r}/>
-				)}
+				<div id="roundsContainer">
+					{rounds.map((r, i) =>
+						<ConnectedRound key={i} roundNumber={i + 1} roundTitle={r}/>
+					)}
+				</div>
 			</div>
 		);
 	}
@@ -79,9 +81,11 @@ var Round = React.createClass({
 				break;
 		}
 		return (
-			<div className="roundContainer">
+			<div className="roundList">
 				<div className="roundTitle">{this.props.roundTitle}</div>
-				{games.map((gid, i) => <ConnectedScoreDetail key={i} gameId={gid}/>)}
+				<div className="roundContainer">
+					{games.map((gid, i) => <ConnectedScoreDetail key={i} gameId={gid}/>)}
+				</div>
 			</div>
 		);
 	}
@@ -108,7 +112,6 @@ var ScoreDetail = React.createClass({
 				</div>
 			);
 		} else {
-console.log('not yet', game);
 			detail = <div className="scoreDetail">Teams not yet decided</div>;
 		}
 
@@ -130,7 +133,8 @@ var ScoreInput = React.createClass({
 	render: function () {
 		return (
 			<div className="scoreInput">
-				{this.props.team.name} (<span className="rank">{this.props.team.rank}</span> <span className="roll">{this.props.state.rolls[this.props.team.rank]}</span>) : <input type="text" onChange={e => this.props.setScore(this.props.game.id, this.props.team.id, e.target.value)} value={this.props.score === null ? '' : this.props.score}/><br/>
+				(<span className="rank">{this.props.team.rank}</span>) {this.props.team.name} : <input type="text" onChange={e => this.props.setScore(this.props.game.id, this.props.team.id, e.target.value)} value={this.props.score === null ? '' : this.props.score}/><br/>
+				<div className="roll">{this.props.state.rolls[this.props.team.rank]}</div>
 			</div>
 		)
 	}

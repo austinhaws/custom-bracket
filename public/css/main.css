@@ -341,14 +341,14 @@ input, .listRow {
 	left: 200px;
 }
 
-#bracket-form .conference .roundList {
+#bracket-form .conference .roundList, .bracket-form .conference .roundList {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-around;
 	height: 500px;
 	width: 100px;
 }
-#bracket-form .conference .roundList.entries, .roundList select {
+#bracket-form .conference .roundList.entries, .roundList select, #bracket-form .conference .roundList.entries, .roundList select {
 	font-size: 10px;
 }
 .conference {
@@ -392,4 +392,29 @@ input, .listRow {
 }
 .conference {
 	margin-bottom: 50px;
+}
+
+#roundsContainer {
+	display: flex;
+	flex-direction: row;
+}
+.roundContainer {
+	display: flex;
+	justify-content: space-around;
+	height: 6000px;
+	flex-direction: column;
+}
+.roundContainer .roundTitle {
+	position: absolute;
+	top: 0;
+}
+.roundContainer input {
+	width: 40px;
+}
+.scoreInput .roll, .scoreInput input {
+	font-size: 10px;
+	font-style: italic;
+}
+.scoreInput input {
+	float: right;
 }
