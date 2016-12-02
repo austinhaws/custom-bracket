@@ -33,13 +33,15 @@ var Scores = React.createClass({
 	},
 	render: function() {
 		const rounds = ['First Round', 'Second Round', 'Sweet 16', 'Elite 8', 'Final 4', 'Championship'];
+		let roundComponents = [];
+		for (let x = 1; x <= 6; x++) {
+			roundComponents.push(<ConnectedRound key={x} roundNumber={x} roundTitle={rounds[x - 1]}/>)
+		}
 		return (
 			<div className="masterContainer">
 				<SaveCancelButtons saveState={this.props.state.saveState} buttonPressedCallback={this.saveButtonPressed}/>
 				<div id="roundsContainer">
-					{rounds.map((r, i) =>
-						<ConnectedRound key={i} roundNumber={i + 1} roundTitle={r}/>
-					)}
+					{roundComponents}
 				</div>
 			</div>
 		);
@@ -80,12 +82,11 @@ var Round = React.createClass({
 				console.error('what round number were you thinking you wanted?', this.props.roundNumber);
 				break;
 		}
-		return (
+		const detail = this.props.state.showRound[this.props.roundNumber] ? <div className="roundContainer">{games.map((gid, i) => <ConnectedScoreDetail key={i} gameId={gid}/>)}</div> : '';
+			return (
 			<div className="roundList">
-				<div className="roundTitle">{this.props.roundTitle}</div>
-				<div className="roundContainer">
-					{games.map((gid, i) => <ConnectedScoreDetail key={i} gameId={gid}/>)}
-				</div>
+				<div className="roundTitle">{this.props.roundTitle} <ConnectedShowHideRoundButton roundNumber={this.props.roundNumber}/></div>
+				{detail}
 			</div>
 		);
 	}
@@ -140,6 +141,24 @@ var ScoreInput = React.createClass({
 	}
 });
 
+const ShowHideRoundButton = React.createClass({
+	propTypes: {
+		// redux
+		state: React.PropTypes.object.isRequired,
+		showRound: React.PropTypes.func.isRequired,
+
+		// parent
+		roundNumber: React.PropTypes.number.isRequired
+	},
+	render: function () {
+		return (
+			<button className="btn-default btn" data-round={this.props.roundNumber} onClick={() => this.props.showRound(this.props.roundNumber, !this.props.state.showRound[this.props.roundNumber])}>
+				{this.props.state.showRound[this.props.roundNumber] ? 'Hide' : 'Show'}
+			</button>
+		);
+	}
+});
+
 // ==== Redux Connectors ==== //
 
 const ConnectedScores = ReactRedux.connect(
@@ -176,6 +195,13 @@ const ConnectedScoreInput = ReactRedux.connect(
 	}}
 )(ScoreInput);
 
+const ConnectedShowHideRoundButton = ReactRedux.connect(
+	(state) => { return {state: state} },
+	(dispatch) => { return {
+		showRound: (roundNumber, isShown) => dispatch({type: globals.constants.ACTION_TYPES.ROUND_SHOWN, payload: {roundNumber: roundNumber, isShown: isShown}})
+	}}
+)(ShowHideRoundButton);
+
 
 // ==== setup Redux store ==== //
 
@@ -189,10 +215,12 @@ globals.data.teams = globals.data[globals.data.bracket.top_left_pool_id].teams
 		return teams;
 	}, []);
 globals.data.saveState = SaveButtonStates.noChanges;
+globals.data.showRound = {1: true, 2: true, 3: true, 4: true, 5: true, 6: true};
 globals.constants.ACTION_TYPES = {
 	SET_SCORE: 'SET_SCORE',
 	RESET_DATA: 'RESET_DATA',
-	SET_SAVE_STATE: 'SET_SAVE_STATE'
+	SET_SAVE_STATE: 'SET_SAVE_STATE',
+	ROUND_SHOWN: 'ROUND_SHOWN'
 };
 globals.originalData = JSON.parse(JSON.stringify(globals.data));
 
@@ -207,9 +235,11 @@ globals.originalData = JSON.parse(JSON.stringify(globals.data));
 const reduce = (state, action) => {
 	let reducers = {};
 
+	const copyState = (state) => Object.assign({}, state);
+
 	// reducer: set score
 	reducers[globals.constants.ACTION_TYPES.SET_SCORE] = (state, action) => {
-		let newState = Object.assign({}, state);
+		let newState = copyState(state);
 
 		// update game
 		let game = state.games[action.payload.gameId];
@@ -250,10 +280,17 @@ const reduce = (state, action) => {
 		return JSON.parse(JSON.stringify(globals.originalData));
 	};
 
-	// recucer: save state
+	// reducer: save state
 	reducers[globals.constants.ACTION_TYPES.SET_SAVE_STATE] = (state, action) => {
-		let newState = Object.assign({}, state);
+		let newState = copyState(state);
 		newState.saveState = action.payload;
+		return newState;
+	};
+
+	// reducer: show/hide round
+	reducers[globals.constants.ACTION_TYPES.ROUND_SHOWN] = (state, action) => {
+		let newState = copyState(state);
+		newState.showRound[action.payload.roundNumber] = action.payload.isShown;
 		return newState;
 	};
 

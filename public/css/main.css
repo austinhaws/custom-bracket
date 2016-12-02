@@ -401,7 +401,7 @@ input, .listRow {
 .roundContainer {
 	display: flex;
 	justify-content: space-around;
-	height: 6000px;
+	height: 100%;
 	flex-direction: column;
 }
 .roundContainer .roundTitle {
@@ -417,4 +417,7 @@ input, .listRow {
 }
 .scoreInput input {
 	float: right;
+}
+.scoreDetail {
+	margin-bottom: 10px;
 }
